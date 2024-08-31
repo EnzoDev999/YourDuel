@@ -1,19 +1,13 @@
+import React from "react";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
+
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Your Duel</h1>
+      <Login />
+      <Signup />
     </div>
   );
 }
