@@ -2,6 +2,7 @@ import React from "react";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Profile from "./components/Profile";
+import DuelTest from "./components/DuelTest";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <Login />
       <Signup />
       <Profile />
+      <DuelTest />
     </div>
   );
 }

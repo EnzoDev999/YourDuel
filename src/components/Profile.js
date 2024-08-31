@@ -20,7 +20,7 @@ const Profile = () => {
       {userInfo && (
         <div>
           <p> Email: {userInfo.email}</p>
-          {/* Affiche d'aytres informations utilisateur si disponibles*/}
+          {/* Affiche d'autres informations utilisateur si disponibles*/}
         </div>
       )}
     </div>
