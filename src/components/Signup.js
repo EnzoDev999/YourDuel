@@ -1,23 +1,36 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setStatus, setError } from "../redux/slices/userSlice";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.user);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     // Ici, nous devrions vérifier que les mots de passe correspondent et envoyer les données au backend
     if (password !== confirmPassword) {
-      alert("Les mots de passe ne correspondent pas");
+      dispatch(setError("Les mots de passe ne correspondent pas"));
       return;
     }
-    // Simuler une inscription en envoyant les données au backend
-    console.log("User registered", { email });
+
+    dispatch(setStatus("loading"));
+
+    // Simuler une requête asynchrone
+    setTimeout(() => {
+      dispatch(setStatus("Succeeded"));
+      console.log("User registered", { email });
+    }, 1000);
   };
 
   return (
     <div>
       <h2>Sign Up</h2>
+      {status === "loading" && <p>Loading...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Email</label>
