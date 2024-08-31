@@ -1,23 +1,36 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { createDuel } from "../redux/slices/duelSlice";
+import { createDuel, setStatus, setError } from "../redux/slices/duelSlice";
+import { fetchQuestions } from "../api";
 
 const LaunchDuel = () => {
   const [opponent, setOpponent] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("Culture Générale");
   const dispatch = useDispatch();
 
-  const handleLaunchDuel = (e) => {
+  const handleLaunchDuel = async (e) => {
     e.preventDefault();
-    const newDuel = {
-      id: Date.now(),
-      challenger: "CurrentUser", // Ceci devrait être remplacé par l'utilisateur authentifié
-      opponent,
-      category,
-      status: "pending",
-    };
-    dispatch(createDuel(newDuel));
-    setOpponent("");
+    dispatch(setStatus("loading"));
+    try {
+      const questions = await fetchQuestions(category);
+      console.log("Questions fetched:", questions); // Log les questions pour vérification
+
+      const newDuel = {
+        id: Date.now(),
+        challenger: "CurrentUser", // Ceci devrait être remplacé par l'utilisateur authentifié
+        opponent,
+        category,
+        status: "pending",
+        questions,
+      };
+
+      dispatch(createDuel(newDuel));
+      dispatch(setStatus("succeeded"));
+      setOpponent("");
+    } catch (error) {
+      dispatch(setError("Echec de la génération des questions"));
+      dispatch(setStatus("failed"));
+    }
   };
 
   return (
@@ -25,25 +38,24 @@ const LaunchDuel = () => {
       <h2>Launch a Duel</h2>
       <form onSubmit={handleLaunchDuel}>
         <div>
-          <label> Opponent's Username:</label>
+          <label>Opponent's Username:</label>
           <input
             type="text"
             value={opponent}
             onChange={(e) => setOpponent(e.target.value)}
-            requied
+            required
           />
         </div>
         <div>
-          <label> Category:</label>
+          <label>Category:</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="Culture Générale">Culture Générale</option>
-            <option value="Sport">Sport</option>
-            <option value="Arts">Arts</option>
-            <option value="Sciences">Sciences</option>
-            <option value="Technologie">Technologie</option>
+            <option value="General Knowledge">General Knowledge</option>
+            <option value="Science">Science</option>
+            <option value="History">History</option>
+            <option value="Sports">Sports</option>
             {/* Ajoute d'autres catégories si nécessaire */}
           </select>
         </div>

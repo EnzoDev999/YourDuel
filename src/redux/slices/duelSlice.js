@@ -2,26 +2,47 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   duels: [],
-  currentDuel: null,
   status: "idle",
   error: null,
 };
 
 const duelSlice = createSlice({
-  name: "duel", // name of the slice
+  name: "duel",
   initialState,
   reducers: {
     createDuel(state, action) {
-      state.duels.push(action.payload); // add the duel to the state
+      state.duels.push(action.payload);
     },
     acceptDuel(state, action) {
-      const duel = state.duels.find((duel) => duel.id === action.payload); // find the duel in the state
+      const duel = state.duels.find((duel) => duel.id === action.payload);
       if (duel) {
-        duel.status = "accepted"; // update the status of the duel
+        duel.status = "accepted";
       }
     },
-    setCurrentDuel(state, action) {
-      state.currentDuel = action.payload;
+    setQuestion(state, action) {
+      return {
+        ...state,
+        duels: state.duels.map((duel) =>
+          duel.id === action.payload.duelId
+            ? {
+                ...duel,
+                question: action.payload.question,
+                options: action.payload.options,
+                correctAnswer: action.payload.correctAnswer,
+              }
+            : duel
+        ),
+      };
+    },
+
+    submitAnswer(state, action) {
+      const duel = state.duels.find(
+        (duel) => duel.id === action.payload.duelId
+      );
+      if (duel) {
+        duel.responses = duel.responses || {};
+        duel.responses[action.payload.userId] = action.payload.answer;
+      }
     },
     setStatus(state, action) {
       state.status = action.payload;
@@ -32,7 +53,13 @@ const duelSlice = createSlice({
   },
 });
 
-export const { createDuel, acceptDuel, setCurrentDuel, setStatus, setError } =
-  duelSlice.actions; // export the action creators
-
-export default duelSlice.reducer; // export the reducer
+export const {
+  createDuel,
+  acceptDuel,
+  setQuestion,
+  submitAnswer,
+  setCurrentDuel,
+  setStatus,
+  setError,
+} = duelSlice.actions;
+export default duelSlice.reducer;

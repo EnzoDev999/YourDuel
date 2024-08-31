@@ -30,6 +30,13 @@ const DuelTest = () => {
           <li key={duel.id}>
             {duel.challenger} vs {duel.opponent} - {duel.category} -{" "}
             {duel.status}
+            {duel.questions && (
+              <ul>
+                {duel.questions.map((question, index) => (
+                  <li key={index}>{question}</li>
+                ))}
+              </ul>
+            )}
             {duel.status === "pending" && (
               <button onClick={() => handleAcceptDuel(duel.id)}>
                 Accept Duel

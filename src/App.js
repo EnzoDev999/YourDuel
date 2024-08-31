@@ -1,20 +1,21 @@
 import React from "react";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Home from "./components/Home";
+import DuelPage from "./components/DuelPage"; // Page dédiée aux duels
 import Profile from "./components/Profile";
-import DuelTest from "./components/DuelTest";
-import LaunchDuel from "./components/LaunchDuel";
 
 function App() {
   return (
-    <div>
-      <h1>Your Duel</h1>
-      <Login />
-      <Signup />
-      <Profile />
-      <DuelTest />
-      <LaunchDuel />
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/duels" element={<DuelPage />} />
+          <Route path="/profile" element={<Profile />} />
+          {/* Ajoute d'autres routes si nécessaire */}
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
