@@ -2,16 +2,23 @@ import React from "react";
 import InitiateDuel from "./InitiateDuel";
 import PendingDuels from "./PendingDuels";
 import DuelQuestion from "./DuelQuestion";
+import { useSelector } from "react-redux";
 
-const DuelPage = () => {
-  const userId = 1; // Simule un utilisateur avec un ID fixe
+const DuelPage = ({ userId }) => {
+  const duels = useSelector((state) =>
+    state.duel.duels.filter(
+      (duel) => duel.challenger === userId || duel.opponent === userId
+    )
+  );
 
   return (
     <div>
-      <h1>Duels</h1>
+      <h1>Mes Duels</h1>
       <InitiateDuel userId={userId} />
       <PendingDuels userId={userId} />
-      <DuelQuestion duelId={userId} userId={userId} />
+      {duels.map((duel) => (
+        <DuelQuestion key={duel.id} duel={duel} userId={userId} />
+      ))}
     </div>
   );
 };

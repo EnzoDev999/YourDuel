@@ -12,6 +12,7 @@ const duelSlice = createSlice({
   reducers: {
     createDuel(state, action) {
       state.duels.push(action.payload);
+      console.log("Création du duel avec ID:", action.payload.id);
     },
     acceptDuel(state, action) {
       const duel = state.duels.find((duel) => duel.id === action.payload);
@@ -20,19 +21,14 @@ const duelSlice = createSlice({
       }
     },
     setQuestion(state, action) {
-      return {
-        ...state,
-        duels: state.duels.map((duel) =>
-          duel.id === action.payload.duelId
-            ? {
-                ...duel,
-                question: action.payload.question,
-                options: action.payload.options,
-                correctAnswer: action.payload.correctAnswer,
-              }
-            : duel
-        ),
-      };
+      const duel = state.duels.find(
+        (duel) => duel.id === action.payload.duelId
+      );
+      if (duel) {
+        duel.question = action.payload.question;
+        duel.options = action.payload.options;
+        duel.correctAnswer = action.payload.correctAnswer;
+      }
     },
 
     submitAnswer(state, action) {

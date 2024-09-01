@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { createDuel, setStatus, setError } from "../redux/slices/duelSlice";
-import { fetchQuestions } from "../api";
 
 const LaunchDuel = () => {
   const [opponent, setOpponent] = useState("");
@@ -12,33 +11,32 @@ const LaunchDuel = () => {
     e.preventDefault();
     dispatch(setStatus("loading"));
     try {
-      const questions = await fetchQuestions(category);
-      console.log("Questions fetched:", questions); // Log les questions pour vérification
-
       const newDuel = {
         id: Date.now(),
-        challenger: "CurrentUser", // Ceci devrait être remplacé par l'utilisateur authentifié
+        challenger: "CurrentUser", // Remplacez par l'utilisateur authentifié
         opponent,
         category,
         status: "pending",
-        questions,
+        question: null, // Assurez-vous que la question est null ici
+        options: [],
+        correctAnswer: null,
       };
 
       dispatch(createDuel(newDuel));
       dispatch(setStatus("succeeded"));
       setOpponent("");
     } catch (error) {
-      dispatch(setError("Echec de la génération des questions"));
+      dispatch(setError("Échec du lancement du duel"));
       dispatch(setStatus("failed"));
     }
   };
 
   return (
     <div>
-      <h2>Launch a Duel</h2>
+      <h2>Lancer un Duel</h2>
       <form onSubmit={handleLaunchDuel}>
         <div>
-          <label>Opponent's Username:</label>
+          <label>Nom d'utilisateur de l'adversaire :</label>
           <input
             type="text"
             value={opponent}
@@ -47,19 +45,19 @@ const LaunchDuel = () => {
           />
         </div>
         <div>
-          <label>Category:</label>
+          <label>Catégorie :</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="General Knowledge">General Knowledge</option>
+            <option value="Culture Générale">Culture Générale</option>
             <option value="Science">Science</option>
-            <option value="History">History</option>
+            <option value="Histoire">Histoire</option>
             <option value="Sports">Sports</option>
             {/* Ajoute d'autres catégories si nécessaire */}
           </select>
         </div>
-        <button type="submit">Launch Duel</button>
+        <button type="submit">Lancer le Duel</button>
       </form>
     </div>
   );

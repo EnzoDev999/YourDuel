@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { acceptDuel, setQuestion } from "../redux/slices/duelSlice";
-import { fetchQuestions } from "../api";
+import questionsData from "../data/questions.json"; // Importer le fichier JSON avec les questions
 
 const PendingDuels = ({ userId }) => {
   const dispatch = useDispatch();
@@ -11,11 +11,21 @@ const PendingDuels = ({ userId }) => {
     )
   );
 
+  const getRandomQuestion = (category) => {
+    const filteredQuestions = category
+      ? questionsData.questions.filter((q) => q.category === category)
+      : questionsData.questions;
+
+    return filteredQuestions[
+      Math.floor(Math.random() * filteredQuestions.length)
+    ];
+  };
+
   const handleAcceptDuel = async (duelId, category) => {
     dispatch(acceptDuel(duelId));
 
     // Générer une question après l'acceptation du duel
-    const questionData = await fetchQuestions(category);
+    const questionData = getRandomQuestion(category);
 
     dispatch(
       setQuestion({
@@ -36,18 +46,18 @@ const PendingDuels = ({ userId }) => {
 
   return (
     <div>
-      <h2>Pending Duels</h2>
+      <h2>Duels en Attente</h2>
       {duels.length > 0 ? (
         duels.map((duel) => (
           <div key={duel.id}>
             <p>Duel en {duel.category}</p>
             <button onClick={() => handleAcceptDuel(duel.id, duel.category)}>
-              Accept Duel
+              Accepter le Duel
             </button>
           </div>
         ))
       ) : (
-        <p>No pending duels.</p>
+        <p>Pas de duels en attente.</p>
       )}
     </div>
   );

@@ -1,52 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { submitAnswer } from "../redux/slices/duelSlice";
 
-const DuelQuestion = ({ duelId, userId }) => {
+const DuelQuestion = ({ duel, userId }) => {
   const dispatch = useDispatch();
-
-  // Utilisation de `useSelector` pour récupérer le duel depuis Redux
-  console.log("Duel ID utilisé dans DuelQuestion:", duelId);
-  const duel = useSelector((state) =>
-    state.duel?.duels?.find((d) => d.id === duelId)
-  );
-  console.log("Duel fetched from Redux:", duel);
-
   const [selectedOption, setSelectedOption] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [localUpdate, setLocalUpdate] = useState(false);
+  const [triggerUpdate, setTriggerUpdate] = useState(false); // État local pour forcer le re-render
 
-  // Ajoute un délai pour permettre la mise à jour complète de l'état avant de rendre le composant
+  // Log du duel et de l'état complet pour débogage
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (duel) {
-        console.log("Duel object après le délai:", duel);
-        if (duel.question) {
-          console.log("Question disponible après le délai :", duel.question);
-          setLocalUpdate((prev) => !prev); // Force le re-render
-        } else {
-          console.log(
-            "Aucune question disponible pour ce duel après le délai."
-          );
-        }
-      } else {
-        console.log("Duel non trouvé après le délai.");
-      }
-    }, 100); // Délai de 100ms
-
-    // Nettoyage du timeout lorsqu'il n'est plus nécessaire
-    return () => clearTimeout(timeout);
-  }, [duelId, duel]);
+    console.log("Duel reçu en prop:", duel);
+    if (duel && duel.question) {
+      console.log("Question trouvée:", duel.question);
+      setTriggerUpdate((prev) => !prev); // Force le re-render si une question est trouvée
+    }
+  }, [duel]);
 
   const handleSubmitAnswer = () => {
     dispatch(
       submitAnswer({
-        duelId,
+        duelId: duel.id, // Utilise l'ID du duel passé en prop
         userId,
         answer: selectedOption,
       })
     );
-
     if (selectedOption === duel.correctAnswer) {
       setFeedback("Correct!");
     } else {
@@ -54,9 +32,19 @@ const DuelQuestion = ({ duelId, userId }) => {
     }
   };
 
-  if (!duel || !duel.question) {
+  if (!duel) {
+    return <p>Chargement du duel...</p>;
+  }
+
+  if (!duel.question) {
     return <p>En attente de la génération de la question...</p>;
   }
+
+  console.log("Rendu de DuelQuestion avec:", {
+    duel,
+    question: duel.question,
+    options: duel.options,
+  });
 
   return (
     <div>
@@ -82,8 +70,9 @@ const DuelQuestion = ({ duelId, userId }) => {
         Soumettre la réponse
       </button>
       {feedback && <p>{feedback}</p>}
-      {/* Utilisation de localUpdate dans le DOM */}
-      {localUpdate && <span style={{ display: "none" }}>{localUpdate}</span>}
+      {triggerUpdate && (
+        <span style={{ display: "none" }}>{triggerUpdate}</span>
+      )}
     </div>
   );
 };

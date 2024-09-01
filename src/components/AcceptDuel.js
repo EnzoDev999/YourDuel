@@ -6,10 +6,20 @@ import {
   setStatus,
   setError,
 } from "../redux/slices/duelSlice";
-import { fetchQuestions } from "../api";
+import questionsData from "../data/questions.json"; // Importation des questions locales
 
 const AcceptDuel = ({ duelId, category }) => {
   const dispatch = useDispatch();
+
+  const getRandomQuestion = (category) => {
+    const filteredQuestions = category
+      ? questionsData.questions.filter((q) => q.category === category)
+      : questionsData.questions;
+
+    return filteredQuestions[
+      Math.floor(Math.random() * filteredQuestions.length)
+    ];
+  };
 
   const handleAcceptDuel = async () => {
     console.log("Bouton cliqué, duel accepté");
@@ -18,10 +28,10 @@ const AcceptDuel = ({ duelId, category }) => {
 
     try {
       dispatch(acceptDuel(duelId));
-      console.log("Duel accepté, génération des questions...");
+      console.log("Duel accepté, sélection d'une question...");
 
-      const questionData = await fetchQuestions(category);
-      console.log("Questions générées:", questionData);
+      const questionData = getRandomQuestion(category); // Sélectionne une question aléatoire
+      console.log("Question sélectionnée:", questionData);
 
       dispatch(
         setQuestion({
@@ -41,8 +51,8 @@ const AcceptDuel = ({ duelId, category }) => {
 
       dispatch(setStatus("succeeded"));
     } catch (error) {
-      console.error("Erreur lors de la génération des questions:", error);
-      dispatch(setError("Failed to generate question. Please try again."));
+      console.error("Erreur lors de la sélection des questions:", error);
+      dispatch(setError("Failed to select question. Please try again."));
       dispatch(setStatus("failed"));
     }
   };
