@@ -1,5 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
+import Navbar from "./Navbar";
 
 const Profile = () => {
   const { isAuthenticated, userInfo, status, error } = useSelector(
@@ -23,6 +24,7 @@ const Profile = () => {
       <h2>Profile</h2>
       {userInfo ? (
         <div>
+          <Navbar />
           <p>Username: {userInfo.username}</p>
           <p>Email: {userInfo.email || "No email provided"}</p>
           {/* Ajoute d'autres informations utilisateur si disponibles */}
