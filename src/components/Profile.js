@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import Navbar from "./Navbar";
 import CreateDuel from "./CreateDuel";
 import PendingDuels from "./PendingDuels";
+import DuelQuestion from "./DuelQuestion";
+import ResetDuelsButton from "./ResetDuelsButton";
 
 const Profile = () => {
   const { isAuthenticated, userInfo, status, error } = useSelector(
@@ -35,6 +37,10 @@ const Profile = () => {
 
           {/* Ajouter ici les invitations en attente */}
           <PendingDuels userId={userInfo.username} />
+
+          {/* Afficher ici les duels en cours */}
+          <DuelQuestion />
+          <ResetDuelsButton />
         </div>
       ) : (
         <p>No user information available.</p>

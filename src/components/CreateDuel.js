@@ -1,31 +1,49 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { createDuel } from "../redux/slices/duelSlice"; // Assurez-vous d'avoir cette action dans votre slice
+import { useDispatch, useSelector } from "react-redux";
+import { createDuel } from "../redux/slices/duelSlice";
+import axios from "axios"; // Importer axios pour faire la requête
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const CreateDuel = () => {
   const [category, setCategory] = useState("Culture Générale");
-  const [opponent, setOpponent] = useState("");
+  const [opponentUsername, setOpponentUsername] = useState("");
   const dispatch = useDispatch();
+  const userId = useSelector((state) => state.user.userInfo._id); // Récupérer l'ID de l'utilisateur connecté
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!opponent) {
+    if (!opponentUsername) {
       alert("Veuillez entrer un nom d'utilisateur pour l'adversaire.");
       return;
     }
 
-    // Logique pour créer un nouveau duel
-    const newDuel = {
-      category,
-      opponent,
-    };
+    try {
+      // Rechercher l'ID de l'opponent par son nom d'utilisateur
+      const response = await axios.get(
+        `${API_URL}/api/auth/users/${opponentUsername}`
+      );
+      const opponentId = response.data._id;
 
-    dispatch(createDuel(newDuel)); // Assurez-vous que cette action gère la création de duel dans votre slice
+      // Créer un nouveau duel avec les informations minimales requises
+      const newDuel = {
+        challenger: userId, // ID de l'utilisateur connecté
+        opponent: opponentId, // Utiliser l'ID de l'opponent récupéré
+        category, // Catégorie choisie
+      };
 
-    // Réinitialisation des champs après soumission
-    setCategory("Culture Générale");
-    setOpponent("");
+      dispatch(createDuel(newDuel));
+
+      // Réinitialisation des champs après soumission
+      setCategory("Culture Générale");
+      setOpponentUsername("");
+    } catch (error) {
+      console.error("Erreur lors de la recherche de l'utilisateur:", error);
+      alert(
+        "Erreur lors de la recherche de l'utilisateur. Vérifiez le nom d'utilisateur et réessayez."
+      );
+    }
   };
 
   return (
@@ -49,8 +67,8 @@ const CreateDuel = () => {
           <label>Nom d'utilisateur de l'adversaire:</label>
           <input
             type="text"
-            value={opponent}
-            onChange={(e) => setOpponent(e.target.value)}
+            value={opponentUsername}
+            onChange={(e) => setOpponentUsername(e.target.value)}
             required
           />
         </div>

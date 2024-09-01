@@ -1,12 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 export const registerUser = createAsyncThunk(
   "user/register",
   async (userData, { rejectWithValue }) => {
     // async function
     try {
-      const response = await axios.post("/api/auth/register", userData);
+      const response = await axios.post(
+        `${API_URL}/api/auth/register`,
+        userData
+      );
       localStorage.setItem("token", response.data.token);
       return response.data;
     } catch (error) {
@@ -15,11 +20,28 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+// Cette fonction récupère les infos utilisateur à partir du token
+export const fetchUserFromToken = createAsyncThunk(
+  "user/fetchUserFromToken",
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const loginUser = createAsyncThunk(
   "user/login",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post("/api/auth/login", userData);
+      const response = await axios.post(`${API_URL}/api/auth/login`, userData);
       localStorage.setItem("token", response.data.token);
       return response.data;
     } catch (error) {
@@ -73,6 +95,15 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(fetchUserFromToken.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.userInfo = action.payload;
+      })
+      .addCase(fetchUserFromToken.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.userInfo = null;
         state.error = action.payload;
       });
   },
