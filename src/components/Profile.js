@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import Navbar from "./Navbar";
+import CreateDuel from "./CreateDuel"; // Import du composant CreateDuel
 
 const Profile = () => {
   const { isAuthenticated, userInfo, status, error } = useSelector(
@@ -21,13 +22,16 @@ const Profile = () => {
 
   return (
     <div>
+      <Navbar />
       <h2>Profile</h2>
       {userInfo ? (
         <div>
-          <Navbar />
           <p>Username: {userInfo.username}</p>
           <p>Email: {userInfo.email || "No email provided"}</p>
           {/* Ajoute d'autres informations utilisateur si disponibles */}
+
+          {/* Intégration du composant CreateDuel */}
+          <CreateDuel />
         </div>
       ) : (
         <p>No user information available.</p>

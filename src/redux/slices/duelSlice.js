@@ -11,8 +11,13 @@ const duelSlice = createSlice({
   initialState,
   reducers: {
     createDuel(state, action) {
-      state.duels.push(action.payload);
-      console.log("Création du duel avec ID:", action.payload.id);
+      const newDuel = {
+        id: Date.now(), // Génère un ID unique pour chaque duel
+        ...action.payload,
+        status: "pending", // Le duel est en attente d'acceptation
+      };
+      state.duels.push(newDuel);
+      state.status = `Duel envoyé à ${action.payload.opponent} dans la catégorie ${action.payload.category}`;
     },
     acceptDuel(state, action) {
       const duel = state.duels.find((duel) => duel.id === action.payload);
