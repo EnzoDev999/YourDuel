@@ -6,9 +6,17 @@ const duelSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  challengerUsername: {
+    type: String,
+    required: true,
+  },
   opponent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
+  },
+  opponentUsername: {
+    type: String,
     required: true,
   },
   category: {
@@ -17,24 +25,22 @@ const duelSchema = new mongoose.Schema({
   },
   question: {
     type: String,
-    required: true,
+    required: false, // Rendre optionnel
   },
   options: {
     type: [String],
-    required: true,
+    required: false, // Rendre optionnel
   },
   correctAnswer: {
     type: String,
-    required: true,
+    required: false, // Rendre optionnel
   },
-  // Réponses des joueurs
   challengerAnswer: {
     type: String,
   },
   opponentAnswer: {
     type: String,
   },
-  // Résultats du duel
   challengerPointsGained: {
     type: Number,
     default: 0,

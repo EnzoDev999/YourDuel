@@ -1,13 +1,29 @@
-// const express = require("express");
-// const {
-//   createDuel,
-//   acceptDuel,
-//   getDuels,
-// } = require("../controllers/duelControllers");
-// const { protect } = require("../middleware/authMiddleware");
-// const router = express.Router();
+module.exports = (io) => {
+  const express = require("express");
+  const {
+    createDuel,
+    getDuels,
+    acceptDuel,
+    getUserDuels,
+    deleteDuel,
+  } = require("../controllers/duelController");
 
-// router.route("/").post(protect, createDuel).get(protect, getDuels);
-// router.route("/:id/accept").put(protect, acceptDuel);
+  const router = express.Router();
 
-// module.exports = router;
+  // Route pour créer un duel
+  router.post("/", (req, res) => createDuel(req, res, io)); // Passer `io` ici
+
+  // Route pour accepter un duel
+  router.put("/:id/accept", acceptDuel);
+
+  // Route pour récupérer tous les duels
+  router.get("/", getDuels);
+
+  // Route pour récupérer les duels d'un utilisateur spécifique
+  router.get("/user/:userId", getUserDuels);
+
+  // Route pour refuser (et donc supprimer) un duel
+  router.delete("/:id/refuse", deleteDuel); // Utiliser la route DELETE pour refuser un duel
+
+  return router;
+};
