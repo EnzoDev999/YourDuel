@@ -23,6 +23,7 @@ const duelSlice = createSlice({
       const duel = state.duels.find((duel) => duel.id === action.payload);
       if (duel) {
         duel.status = "accepted";
+        state.status = `Duel accepté contre ${duel.challenger}`;
       }
     },
     setQuestion(state, action) {

@@ -1,63 +1,34 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { acceptDuel, setQuestion } from "../redux/slices/duelSlice";
-import questionsData from "../data/questions.json"; // Importer le fichier JSON avec les questions
+import { useSelector, useDispatch } from "react-redux";
+import { acceptDuel } from "../redux/slices/duelSlice"; // Assurez-vous d'avoir cette action dans votre slice
 
 const PendingDuels = ({ userId }) => {
   const dispatch = useDispatch();
-  const duels = useSelector((state) =>
+  const pendingDuels = useSelector((state) =>
     state.duel.duels.filter(
       (duel) => duel.opponent === userId && duel.status === "pending"
     )
   );
 
-  const getRandomQuestion = (category) => {
-    const filteredQuestions = category
-      ? questionsData.questions.filter((q) => q.category === category)
-      : questionsData.questions;
-
-    return filteredQuestions[
-      Math.floor(Math.random() * filteredQuestions.length)
-    ];
-  };
-
-  const handleAcceptDuel = async (duelId, category) => {
+  const handleAcceptDuel = (duelId) => {
     dispatch(acceptDuel(duelId));
-
-    // Générer une question après l'acceptation du duel
-    const questionData = getRandomQuestion(category);
-
-    dispatch(
-      setQuestion({
-        duelId,
-        question: questionData.question,
-        options: questionData.options,
-        correctAnswer: questionData.correctAnswer,
-      })
-    );
-
-    console.log("Dispatched setQuestion with:", {
-      duelId: duelId, // Assurez-vous que ce duelId est correct
-      question: questionData.question,
-      options: questionData.options,
-      correctAnswer: questionData.correctAnswer,
-    });
   };
 
   return (
     <div>
-      <h2>Duels en Attente</h2>
-      {duels.length > 0 ? (
-        duels.map((duel) => (
+      <h2>Invitations de Duels en Attente</h2>
+      {pendingDuels.length > 0 ? (
+        pendingDuels.map((duel) => (
           <div key={duel.id}>
-            <p>Duel en {duel.category}</p>
-            <button onClick={() => handleAcceptDuel(duel.id, duel.category)}>
+            <p>Catégorie : {duel.category}</p>
+            <p>Adversaire : {duel.challenger}</p>
+            <button onClick={() => handleAcceptDuel(duel.id)}>
               Accepter le Duel
             </button>
           </div>
         ))
       ) : (
-        <p>Pas de duels en attente.</p>
+        <p>Vous n'avez pas d'invitations en attente.</p>
       )}
     </div>
   );

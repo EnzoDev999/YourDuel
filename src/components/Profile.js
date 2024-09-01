@@ -1,7 +1,8 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import Navbar from "./Navbar";
-import CreateDuel from "./CreateDuel"; // Import du composant CreateDuel
+import CreateDuel from "./CreateDuel";
+import PendingDuels from "./PendingDuels";
 
 const Profile = () => {
   const { isAuthenticated, userInfo, status, error } = useSelector(
@@ -28,10 +29,12 @@ const Profile = () => {
         <div>
           <p>Username: {userInfo.username}</p>
           <p>Email: {userInfo.email || "No email provided"}</p>
-          {/* Ajoute d'autres informations utilisateur si disponibles */}
 
-          {/* Intégration du composant CreateDuel */}
+          {/* Ajouter ici la création de duel */}
           <CreateDuel />
+
+          {/* Ajouter ici les invitations en attente */}
+          <PendingDuels userId={userInfo.username} />
         </div>
       ) : (
         <p>No user information available.</p>
