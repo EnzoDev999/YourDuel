@@ -1,24 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, clearError } from "../redux/slices/userSlice";
+import { loginUser } from "../redux/slices/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const dispatch = useDispatch();
-  const error = useSelector((state) => state.user.error);
+  const { isAuthenticated, error, status } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(clearError());
-    dispatch(loginUser({ username }));
+    dispatch(loginUser({ username, password }));
   };
+
+  // Utilisation de useEffect pour rediriger si l'utilisateur est authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/profile"); // Redirige vers la page de profil
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div>
-      <h2>Connexion</h2>
-      <form onSubmit={handleLogin}>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
         <div>
-          <label>Nom d'utilisateur :</label>
+          <label>Username:</label>
           <input
             type="text"
             value={username}
@@ -26,9 +35,19 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit">Se connecter</button>
+        <div>
+          <label>Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">Login</button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {status === "loading" && <p>Logging in...</p>}
+      {error && <p>{error}</p>}
     </div>
   );
 };

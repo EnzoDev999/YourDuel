@@ -1,20 +1,23 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleRegister = () => {
+    navigate("/register");
+  };
+
   return (
     <div>
-      <h1>Bienvenue sur Your Duel</h1>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/duels">Aller aux duels</Link>
-          </li>
-          <li>
-            <Link to="/profile">Voir le profil</Link>
-          </li>
-        </ul>
-      </nav>
+      <h1>Welcome to YourDuel</h1>
+      <p>Please choose an option:</p>
+      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleRegister}>Register</button>
     </div>
   );
 };

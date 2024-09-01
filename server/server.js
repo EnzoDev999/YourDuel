@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
-const duelRoutes = require("./routes/duelRoutes");
+// const duelRoutes = require("./routes/duelRoutes");
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
-app.use("/api/duels", duelRoutes);
+// app.use("/api/duels", duelRoutes);
 
 const PORT = process.env.PORT || 5000;
 

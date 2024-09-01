@@ -1,24 +1,25 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser, clearError } from "../redux/slices/userSlice";
+import { registerUser } from "../redux/slices/userSlice";
 
 const Register = () => {
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const dispatch = useDispatch();
-  const error = useSelector((state) => state.user.error);
+  const { error, status } = useSelector((state) => state.user);
 
-  const handleRegister = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(clearError());
-    dispatch(registerUser({ username }));
+    dispatch(registerUser({ username, password, email }));
   };
 
   return (
     <div>
-      <h2>Inscription</h2>
-      <form onSubmit={handleRegister}>
+      <h2>Register</h2>
+      <form onSubmit={handleSubmit}>
         <div>
-          <label>Nom d'utilisateur :</label>
+          <label>Username:</label>
           <input
             type="text"
             value={username}
@@ -26,9 +27,27 @@ const Register = () => {
             required
           />
         </div>
-        <button type="submit">S'inscrire</button>
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">Register</button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {status === "loading" && <p>Registering...</p>}
+      {error && <p>{error}</p>}
     </div>
   );
 };

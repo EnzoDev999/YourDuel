@@ -1,29 +1,21 @@
 import React from "react";
-import { useSelector } from "react-redux";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Home from "./components/Home";
 import Register from "./components/Register";
 import Login from "./components/Login";
-import Logout from "./components/Logout";
-import DuelPage from "./components/DuelPage";
+import Profile from "./components/Profile";
 
 function App() {
-  const currentUser = useSelector((state) => state.user.currentUser);
-
   return (
-    <div>
-      {!currentUser ? (
-        <>
-          <Register />
-          <Login />
-        </>
-      ) : (
-        <>
-          <p>Bienvenue, {currentUser.username}!</p>
-          <Logout />
-          <DuelPage userId={currentUser.username} />{" "}
-          {/* Passer l'ID utilisateur à DuelPage */}
-        </>
-      )}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        {/* Ajoute d'autres routes ici */}
+      </Routes>
+    </Router>
   );
 }
 

@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 
 const Profile = () => {
-  const { isAuthenticated, userInfo, status } = useSelector(
+  const { isAuthenticated, userInfo, status, error } = useSelector(
     (state) => state.user
   );
 
@@ -10,18 +10,25 @@ const Profile = () => {
     return <p>Loading...</p>;
   }
 
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
+
   if (!isAuthenticated) {
-    return <p> You are not logged in. </p>;
+    return <p>You are not logged in.</p>;
   }
 
   return (
     <div>
       <h2>Profile</h2>
-      {userInfo && (
+      {userInfo ? (
         <div>
-          <p> Email: {userInfo.email}</p>
-          {/* Affiche d'autres informations utilisateur si disponibles*/}
+          <p>Username: {userInfo.username}</p>
+          <p>Email: {userInfo.email || "No email provided"}</p>
+          {/* Ajoute d'autres informations utilisateur si disponibles */}
         </div>
+      ) : (
+        <p>No user information available.</p>
       )}
     </div>
   );
