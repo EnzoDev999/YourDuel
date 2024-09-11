@@ -40,7 +40,7 @@ exports.createDuel = async (req, res, io) => {
 };
 
 // Accepter un duel (ajouter les questions)
-exports.acceptDuel = async (req, res) => {
+exports.acceptDuel = async (req, res, io) => {
   try {
     const duel = await Duel.findById(req.params.id);
     if (!duel) {
@@ -52,7 +52,19 @@ exports.acceptDuel = async (req, res) => {
       req.body.question || "Quelle est la capitale de la France ?";
     duel.options = req.body.options || ["Paris", "Lyon", "Marseille", "Nice"];
     duel.correctAnswer = req.body.correctAnswer || "Paris";
+
     await duel.save();
+
+    // Notification aux joueurs du duel
+    io.to(duel.challenger.toString()).emit("duelAccepted", duel);
+    io.to(duel.opponent.toString()).emit("duelAccepted", duel);
+
+    console.log(`Duel accepté : ${duel._id}`);
+    console.log(
+      `Émission de l'événement 'duelAccepted' aux joueurs : ${duel.challenger} et ${duel.opponent}`
+    );
+
+    // Un seul appel res.status(200)
     res.status(200).json(duel);
   } catch (error) {
     res
@@ -76,8 +88,21 @@ exports.getDuels = async (req, res) => {
 exports.getUserDuels = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const duels = await Duel.find({ opponent: userId, status: "pending" });
-    res.status(200).json(duels);
+
+    // Récupérer à la fois les duels envoyés et reçus par l'utilisateur
+    const receivedDuels = await Duel.find({
+      opponent: userId,
+      status: "pending",
+    });
+    const sentDuels = await Duel.find({
+      challenger: userId,
+      status: "pending",
+    });
+
+    // Combiner les duels envoyés et reçus
+    const allDuels = [...receivedDuels, ...sentDuels];
+
+    res.status(200).json(allDuels);
   } catch (error) {
     res
       .status(500)
@@ -85,12 +110,17 @@ exports.getUserDuels = async (req, res) => {
   }
 };
 
-exports.deleteDuel = async (req, res) => {
+exports.deleteDuel = async (req, res, io) => {
   try {
     const duel = await Duel.findByIdAndDelete(req.params.id); // Utilisation de findByIdAndDelete
     if (!duel) {
       return res.status(404).json({ message: "Duel non trouvé" });
     }
+
+    // Notification aux joueurs que le duel a été annulé
+    io.to(duel.challenger.toString()).emit("duelCancelled", duel._id);
+    io.to(duel.opponent.toString()).emit("duelCancelled", duel._id);
+
     res.status(200).json({ message: "Duel supprimé avec succès" });
   } catch (error) {
     console.error("Erreur lors de la suppression du duel :", error);

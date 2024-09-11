@@ -1,28 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import questionsData from "../../data/questions.json";
+import questionsData from "../../data/questions.json"; // Importer les questions du fichier JSON
 
 const initialState = {
   duels: [],
   status: "idle",
   error: null,
 };
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "https://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev";
 
-// Action pour récupérer les duels depuis le backend
-export const fetchDuels = createAsyncThunk(
-  "duel/fetchDuels",
-  async (userId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/duels/user/${userId}`);
-      console.log("Duels récupérés de l'API:", response); // Log des données récupérées
-      return response.data; // Cela devrait être un tableau de duels
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
+// Fonction pour sélectionner une question en fonction de la catégorie
 function getQuestionByCategory(category) {
   const questions = questionsData.questions.filter(
     (q) => q.category === category
@@ -30,12 +19,12 @@ function getQuestionByCategory(category) {
   return questions[Math.floor(Math.random() * questions.length)];
 }
 
-// Action asynchrone pour créer un duel via le backend
-export const createDuel = createAsyncThunk(
-  "duel/createDuel",
-  async (duelData, { rejectWithValue }) => {
+// Action pour récupérer les duels depuis le backend
+export const fetchDuels = createAsyncThunk(
+  "duel/fetchDuels",
+  async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/duels`, duelData); // Notez l'utilisation de '/api/duels' ici
+      const response = await axios.get(`${API_URL}/api/duels/user/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -43,6 +32,33 @@ export const createDuel = createAsyncThunk(
   }
 );
 
+// Action pour créer un duel via le backend
+export const createDuel = createAsyncThunk(
+  "duel/createDuel",
+  async (duelData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/duels`, duelData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+// Action pour accepter un duel via le backend
+export const acceptDuel = createAsyncThunk(
+  "duel/acceptDuel",
+  async (duelId, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/api/duels/${duelId}/accept`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+// Action pour supprimer un duel
 export const deleteDuel = createAsyncThunk(
   "duel/deleteDuel",
   async (duelId, { rejectWithValue }) => {
@@ -61,20 +77,26 @@ const duelSlice = createSlice({
   name: "duel",
   initialState,
   reducers: {
+    // Utilisation de la fonction pour générer une question lors de l'acceptation d'un duel
     acceptDuel(state, action) {
-      const duel = state.duels.find((duel) => duel.id === action.payload);
+      const duel = state.duels.find((duel) => duel._id === action.payload);
       if (duel) {
         duel.status = "accepted";
         const question = getQuestionByCategory(duel.category);
         duel.question = question.question;
         duel.options = question.options;
         duel.correctAnswer = question.correctAnswer;
-        state.status = `Duel accepté contre ${duel.challenger}`;
+        state.status = `Duel accepté contre ${duel.challengerUsername}`;
       }
     },
+    // Action pour supprimer un duel
+    removeDuel(state, action) {
+      state.duels = state.duels.filter((duel) => duel._id !== action.payload);
+    },
+    // Mettre à jour la question dans un duel
     setQuestion(state, action) {
       const duel = state.duels.find(
-        (duel) => duel.id === action.payload.duelId
+        (duel) => duel._id === action.payload.duelId
       );
       if (duel) {
         duel.question = action.payload.question;
@@ -82,9 +104,10 @@ const duelSlice = createSlice({
         duel.correctAnswer = action.payload.correctAnswer;
       }
     },
+    // Soumettre la réponse à une question
     submitAnswer(state, action) {
       const duel = state.duels.find(
-        (duel) => duel.id === action.payload.duelId
+        (duel) => duel._id === action.payload.duelId
       );
       if (duel) {
         duel.userAnswer = action.payload.answer;
@@ -120,6 +143,25 @@ const duelSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      .addCase(acceptDuel.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(acceptDuel.fulfilled, (state, action) => {
+        const duel = state.duels.find(
+          (duel) => duel._id === action.payload._id
+        );
+        if (duel) {
+          duel.status = "accepted";
+          duel.question = action.payload.question;
+          duel.options = action.payload.options;
+          duel.correctAnswer = action.payload.correctAnswer;
+        }
+        state.status = "succeeded";
+      })
+      .addCase(acceptDuel.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
       .addCase(deleteDuel.pending, (state) => {
         state.status = "loading";
       })
@@ -136,7 +178,7 @@ const duelSlice = createSlice({
   },
 });
 
-export const { acceptDuel, setQuestion, submitAnswer, clearDuels } =
+export const { removeDuel, setQuestion, submitAnswer, clearDuels } =
   duelSlice.actions;
 
 export default duelSlice.reducer;

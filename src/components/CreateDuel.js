@@ -3,7 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { createDuel } from "../redux/slices/duelSlice";
 import axios from "axios"; // Importer axios pour faire la requête
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "https://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev";
 
 const CreateDuel = () => {
   const [category, setCategory] = useState("Culture Générale");

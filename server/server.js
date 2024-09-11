@@ -10,23 +10,46 @@ dotenv.config();
 connectDB();
 
 const app = express();
-const server = http.createServer(app); // Créer un serveur HTTP
+const server = http.createServer(app);
+
+// Autoriser le frontend à se connecter via CORS
+app.use(
+  cors({
+    origin: "https://turbo-space-capybara-qjgjjxrp6q529xxr-3000.app.github.dev", // URL de ton frontend
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Autoriser les cookies et autres informations d'identification
+  })
+);
+
 const io = new Server(server, {
   cors: {
-    origin: "*", // Permettre toutes les origines (à restreindre en production)
+    origin: "https://turbo-space-capybara-qjgjjxrp6q529xxr-3000.app.github.dev", // URL de ton frontend
+    methods: ["GET", "POST"],
   },
 });
 
-app.use(cors());
+app.set("socketio", io); // Attache l'objet io à l'application
+
+// Tes routes et middlewares ici
 app.use(express.json());
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/duels", require("./routes/duelRoutes")(io));
 
 io.on("connection", (socket) => {
+  console.log(`Nouvelle connexion : ${socket.id}`);
+
   socket.on("join", (userId) => {
+    console.log(`L'utilisateur ${userId} a rejoint son room`);
     socket.join(userId);
-    console.log(`L'utilisateur ${userId} a rejoint son propre room`);
+  });
+
+  socket.on("duelReceived", (data) => {
+    console.log("Duel reçu :", data);
+  });
+
+  socket.on("duelAccepted", (data) => {
+    console.log("Duel accepté :", data);
   });
 });
 

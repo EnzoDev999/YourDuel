@@ -34,6 +34,7 @@ exports.register = async (req, res) => {
 // Connexion d'un utilisateur
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+  console.log(req.body);
   try {
     const user = await User.findOne({ username });
     if (user && (await bcrypt.compare(password, user.password))) {

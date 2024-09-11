@@ -14,7 +14,7 @@ module.exports = (io) => {
   router.post("/", (req, res) => createDuel(req, res, io)); // Passer `io` ici
 
   // Route pour accepter un duel
-  router.put("/:id/accept", acceptDuel);
+  router.put("/:id/accept", (req, res) => acceptDuel(req, res, io));
 
   // Route pour récupérer tous les duels
   router.get("/", getDuels);
