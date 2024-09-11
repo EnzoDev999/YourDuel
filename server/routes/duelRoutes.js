@@ -1,13 +1,13 @@
-module.exports = (io) => {
-  const express = require("express");
-  const {
-    createDuel,
-    getDuels,
-    acceptDuel,
-    getUserDuels,
-    deleteDuel,
-  } = require("../controllers/duelController");
+const express = require("express");
+const {
+  createDuel,
+  getDuels,
+  acceptDuel,
+  getUserDuels,
+  deleteDuel,
+} = require("../controllers/duelController");
 
+module.exports = (io) => {
   const router = express.Router();
 
   // Route pour créer un duel
@@ -23,7 +23,7 @@ module.exports = (io) => {
   router.get("/user/:userId", getUserDuels);
 
   // Route pour refuser (et donc supprimer) un duel
-  router.delete("/:id/refuse", deleteDuel); // Utiliser la route DELETE pour refuser un duel
+  router.delete("/:id/refuse", (req, res) => deleteDuel(req, res, io));
 
   return router;
 };

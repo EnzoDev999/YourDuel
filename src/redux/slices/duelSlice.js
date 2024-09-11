@@ -1,23 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import questionsData from "../../data/questions.json"; // Importer les questions du fichier JSON
 
 const initialState = {
   duels: [],
   status: "idle",
   error: null,
 };
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev";
 
-// Fonction pour sélectionner une question en fonction de la catégorie
-function getQuestionByCategory(category) {
-  const questions = questionsData.questions.filter(
-    (q) => q.category === category
-  );
-  return questions[Math.floor(Math.random() * questions.length)];
-}
+const API_URL = process.env.API_URL || "http://localhost:5000";
 
 // Action pour récupérer les duels depuis le backend
 export const fetchDuels = createAsyncThunk(
@@ -51,7 +41,7 @@ export const acceptDuel = createAsyncThunk(
   async (duelId, { rejectWithValue }) => {
     try {
       const response = await axios.put(`${API_URL}/api/duels/${duelId}/accept`);
-      return response.data;
+      return response.data; // Le backend renverra la question, les options et la réponse correcte
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -73,27 +63,29 @@ export const deleteDuel = createAsyncThunk(
   }
 );
 
+export const fetchRandomQuestion = createAsyncThunk(
+  "duel/fetchRandomQuestion",
+  async (category, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/questions/random/${category}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const duelSlice = createSlice({
   name: "duel",
   initialState,
   reducers: {
-    // Utilisation de la fonction pour générer une question lors de l'acceptation d'un duel
-    acceptDuel(state, action) {
-      const duel = state.duels.find((duel) => duel._id === action.payload);
-      if (duel) {
-        duel.status = "accepted";
-        const question = getQuestionByCategory(duel.category);
-        duel.question = question.question;
-        duel.options = question.options;
-        duel.correctAnswer = question.correctAnswer;
-        state.status = `Duel accepté contre ${duel.challengerUsername}`;
-      }
-    },
     // Action pour supprimer un duel
     removeDuel(state, action) {
       state.duels = state.duels.filter((duel) => duel._id !== action.payload);
     },
-    // Mettre à jour la question dans un duel
+    // Mettre à jour la question dans un duel (après acceptation)
     setQuestion(state, action) {
       const duel = state.duels.find(
         (duel) => duel._id === action.payload.duelId
@@ -136,6 +128,7 @@ const duelSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchDuels.fulfilled, (state, action) => {
+        console.log("fetchDuels.fulfilled - duels récupérés :", action.payload); // Log pour vérifier les duels
         state.duels = action.payload;
         state.status = "succeeded";
       })
@@ -147,18 +140,43 @@ const duelSlice = createSlice({
         state.status = "loading";
       })
       .addCase(acceptDuel.fulfilled, (state, action) => {
-        const duel = state.duels.find(
+        const updatedDuel = state.duels.find(
           (duel) => duel._id === action.payload._id
         );
-        if (duel) {
-          duel.status = "accepted";
-          duel.question = action.payload.question;
-          duel.options = action.payload.options;
-          duel.correctAnswer = action.payload.correctAnswer;
+        if (updatedDuel) {
+          updatedDuel.status = "accepted";
+          updatedDuel.question = action.payload.question;
+          updatedDuel.options = action.payload.options;
+          updatedDuel.correctAnswer = action.payload.correctAnswer;
+          console.log(
+            "acceotDuel Duel mis à jour avec la question :",
+            JSON.parse(JSON.stringify(updatedDuel))
+          ); // Utilisez current() pour déproxer
+        } else {
+          console.log("Duel non trouvé lors de l'acceptation"); // Ajoutez ce log pour être sûr que le duel est bien trouvé
         }
         state.status = "succeeded";
       })
       .addCase(acceptDuel.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(fetchRandomQuestion.fulfilled, (state, action) => {
+        const duel = state.duels.find(
+          (duel) => duel._id === action.payload.duelId
+        );
+        if (duel) {
+          duel.question = action.payload.question;
+          duel.options = action.payload.options;
+          duel.correctAnswer = action.payload.correctAnswer;
+
+          console.log(
+            "fetchrandom Duel mis à jour avec la question :",
+            JSON.parse(JSON.stringify(duel))
+          );
+        }
+      })
+      .addCase(fetchRandomQuestion.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

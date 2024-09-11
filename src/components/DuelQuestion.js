@@ -4,32 +4,27 @@ import { submitAnswer, setQuestion } from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
 const DuelQuestion = ({ duelId }) => {
+  console.log("DuelQuestion: duelId reçu :", duelId); // Ajoutez ce log pour vérifier le duelId dans DuelQuestion
+
   const dispatch = useDispatch();
   const [selectedOption, setSelectedOption] = useState("");
   const [feedback, setFeedback] = useState("");
 
   // Sélection du duel à partir de l'état Redux
   const duel = useSelector((state) => {
-    const foundDuel = state.duel.duels.find((d) => d._id === duelId); // Utilisation de _id si c'est l'identifiant unique
-    console.log("Duel trouvé :", foundDuel); // Log pour vérifier ce que reçoit le composant
+    const foundDuel = state.duel.duels.find((duel) => duel._id === duelId);
+    console.log("Duel trouvé dans Redux :", foundDuel); // Log pour vérifier si le duel est bien trouvé dans Redux
     return foundDuel;
   });
 
   useEffect(() => {
-    // Connexion à WebSocket, cette logique n'a pas besoin d'être déclenchée à chaque modification de duel
-    const socket = io(
-      process.env.REACT_APP_API_URL ||
-        "http://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev"
-    );
+    const socket = io(process.env.REACT_APP_API_URL);
 
-    socket.emit("join", duelId); // Rejoindre la room spécifique au duel
+    socket.emit("join", duelId);
     console.log(`Rejoint la room du duel ${duelId}`);
 
-    // Écoute pour l'événement duelReady
     socket.on("duelAccepted", (updatedDuel) => {
-      console.log("Duel prêt avec la question:", updatedDuel);
-
-      // Mise à jour de l'état redux avec les données du duel accepté
+      console.log("Duel accepté via WebSocket avec la question:", updatedDuel);
       dispatch(
         setQuestion({
           duelId: updatedDuel._id,
@@ -41,9 +36,9 @@ const DuelQuestion = ({ duelId }) => {
     });
 
     return () => {
-      socket.off("duelAccepted"); // Nettoyage de l'événement lors du démontage
+      socket.off("duelAccepted");
     };
-  }, [dispatch, duelId]); // duelId est suffisant ici, pas besoin d'inclure "duel"
+  }, [dispatch, duelId]);
 
   const handleSubmit = () => {
     if (duel && selectedOption) {
@@ -63,18 +58,20 @@ const DuelQuestion = ({ duelId }) => {
   };
 
   if (!duel) {
-    return <p>Aucun duel en cours.</p>; // Message lorsque le duel n'est pas trouvé
+    console.log("Le duel a disparu ou n'est pas disponible dans Redux.");
+    return <p>Aucun duel en cours.</p>;
   }
 
-  if (!duel.question) {
-    return <p>En attente de la génération de la question...</p>; // Message lorsque la question n'est pas encore générée
+  if (duel.status !== "accepted") {
+    console.log("Le statut du duel n'est pas accepté :", duel);
+    return <p>En attente de la génération de la question...</p>;
   }
 
-  return (
-    <div>
-      <h3>{duel.question}</h3>
-      {duel.options && duel.options.length > 0 ? (
-        duel.options.map((option, index) => (
+  if (duel.status === "accepted") {
+    return (
+      <div>
+        <h3>{duel.question}</h3>
+        {duel.options.map((option, index) => (
           <div key={index}>
             <label>
               <input
@@ -86,16 +83,14 @@ const DuelQuestion = ({ duelId }) => {
               {option}
             </label>
           </div>
-        ))
-      ) : (
-        <p>Pas d'options disponibles pour cette question.</p>
-      )}
-      <button onClick={handleSubmit} disabled={!selectedOption}>
-        Soumettre la réponse
-      </button>
-      {feedback && <p>{feedback}</p>}
-    </div>
-  );
+        ))}
+        <button onClick={handleSubmit} disabled={!selectedOption}>
+          Soumettre la réponse
+        </button>
+        {feedback && <p>{feedback}</p>}
+      </div>
+    );
+  }
 };
 
 export default DuelQuestion;

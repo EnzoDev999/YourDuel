@@ -11,6 +11,14 @@ const Profile = () => {
     (state) => state.user
   );
 
+  const duels = useSelector((state) =>
+    state.duel.duels.filter(
+      (duel) =>
+        duel.status === "accepted" &&
+        (duel.challenger === userInfo._id || duel.opponent === userInfo._id)
+    )
+  );
+
   if (status === "loading") {
     return <p>Loading...</p>;
   }
@@ -36,10 +44,17 @@ const Profile = () => {
           <CreateDuel />
 
           {/* Ajouter ici les invitations en attente */}
-          <PendingDuels userId={userInfo.username} />
+          <PendingDuels userId={userInfo._id} />
 
           {/* Afficher ici les duels en cours */}
-          <DuelQuestion />
+          {duels.length > 0 ? (
+            duels.map((duel) => (
+              <DuelQuestion key={duel._id} duelId={duel._id} />
+            ))
+          ) : (
+            <p>Aucun duel en cours.</p>
+          )}
+
           <ResetDuelsButton />
         </div>
       ) : (

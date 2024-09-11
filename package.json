@@ -36,7 +36,7 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "test": "react-scripts test"
   },
-  "proxy": "https://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev",
+
   "eslintConfig": {
     "extends": [
       "react-app",

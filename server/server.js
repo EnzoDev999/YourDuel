@@ -15,27 +15,30 @@ const server = http.createServer(app);
 // Autoriser le frontend à se connecter via CORS
 app.use(
   cors({
-    origin: "https://turbo-space-capybara-qjgjjxrp6q529xxr-3000.app.github.dev", // URL de ton frontend
+    origin: "http://localhost:3000", // URL du frontend local
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Autoriser les cookies et autres informations d'identification
+    credentials: true,
   })
 );
 
 const io = new Server(server, {
   cors: {
-    origin: "https://turbo-space-capybara-qjgjjxrp6q529xxr-3000.app.github.dev", // URL de ton frontend
-    methods: ["GET", "POST"],
+    origin: "http://localhost:3000", // URL du frontend local
+    methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
 app.set("socketio", io); // Attache l'objet io à l'application
 
-// Tes routes et middlewares ici
+// Middleware pour parser les requêtes en JSON
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/duels", require("./routes/duelRoutes")(io));
+app.use("/api/questions", require("./routes/questionRoutes")); // Ajoute cette ligne pour la route des questions
 
+// Connexion à Socket.IO
 io.on("connection", (socket) => {
   console.log(`Nouvelle connexion : ${socket.id}`);
 
@@ -53,8 +56,8 @@ io.on("connection", (socket) => {
   });
 });
 
+// Lancement du serveur
 const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () =>
-  console.log(`Serveur en cours d'exécution sur le port ${PORT}`)
-);
+server.listen(PORT, () => {
+  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+});

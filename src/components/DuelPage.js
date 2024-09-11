@@ -1,26 +1,66 @@
 import React from "react";
-import InitiateDuel from "./InitiateDuel";
+import { useSelector } from "react-redux";
+import Navbar from "./Navbar";
+import CreateDuel from "./CreateDuel";
 import PendingDuels from "./PendingDuels";
 import DuelQuestion from "./DuelQuestion";
-import { useSelector } from "react-redux";
+import ResetDuelsButton from "./ResetDuelsButton";
 
-const DuelPage = ({ userId }) => {
+const Profile = () => {
+  const { isAuthenticated, userInfo, status, error } = useSelector(
+    (state) => state.user
+  );
+
   const duels = useSelector((state) =>
     state.duel.duels.filter(
-      (duel) => duel.challenger === userId || duel.opponent === userId
+      (duel) =>
+        (duel.challenger === userInfo._id || duel.opponent === userInfo._id) &&
+        duel.status === "accepted"
     )
   );
 
+  console.log("Duels acceptés :", duels); // Vérifiez ce que vous obtenez ici
+
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
+
+  if (!isAuthenticated) {
+    return <p>You are not logged in.</p>;
+  }
+
   return (
     <div>
-      <h1>Mes Duels</h1>
-      <InitiateDuel userId={userId} />
-      <PendingDuels userId={userId} />
-      {duels.map((duel) => (
-        <DuelQuestion key={duel.id} duel={duel} userId={userId} />
-      ))}
+      <Navbar />
+      <h2>Profile</h2>
+      {userInfo ? (
+        <div>
+          <p>Username: {userInfo.username}</p>
+          <p>Email: {userInfo.email || "No email provided"}</p>
+
+          <CreateDuel />
+
+          <PendingDuels userId={userInfo._id} />
+
+          {duels.length > 0 ? (
+            duels.map((duel) => (
+              <DuelQuestion key={duel._id} duelId={duel._id} />
+            ))
+          ) : (
+            <p>Aucun duel en cours.</p>
+          )}
+
+          <ResetDuelsButton />
+        </div>
+      ) : (
+        <p>No user information available.</p>
+      )}
     </div>
   );
 };
 
-export default DuelPage;
+export default Profile;

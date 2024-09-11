@@ -1,13 +1,13 @@
 const Duel = require("../models/Duel");
 const User = require("../models/User");
+const axios = require("axios");
 
 // Créer un nouveau duel
+// Créer un nouveau duel avec génération de la question
 exports.createDuel = async (req, res, io) => {
   const { challenger, opponent, category } = req.body;
 
   try {
-    console.log("Données reçues pour créer un duel :", req.body);
-
     const challengerUser = await User.findById(challenger);
     const opponentUser = await User.findById(opponent);
 
@@ -15,22 +15,29 @@ exports.createDuel = async (req, res, io) => {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
+    // Appel à l'API pour obtenir une question aléatoire dès la création du duel
+    const response = await axios.get(
+      `${process.env.API_URL}/api/questions/random/${category}`
+    );
+    const questionData = response.data;
+
     const duel = new Duel({
       challenger: challengerUser._id,
       challengerUsername: challengerUser.username,
       opponent: opponentUser._id,
       opponentUsername: opponentUser.username,
       category,
-      status: "pending", // Le duel est créé en mode "pending"
+      question: questionData.question, // Ajouter la question générée
+      options: questionData.options, // Ajouter les options
+      correctAnswer: questionData.correctAnswer, // Ajouter la réponse correcte
+      status: "pending", // Le duel est en attente d'acceptation
     });
 
     await duel.save();
 
-    // Ajout d'un console.log avant l'émission de l'événement
-    console.log(
-      `Émission de l'événement 'duelReceived' à l'utilisateur ${opponentUser._id}`
-    );
+    // Notification via WebSocket au joueur qui reçoit le duel
     io.to(opponentUser._id.toString()).emit("duelReceived", duel);
+
     res.status(201).json(duel);
   } catch (error) {
     res
@@ -39,32 +46,20 @@ exports.createDuel = async (req, res, io) => {
   }
 };
 
-// Accepter un duel (ajouter les questions)
 exports.acceptDuel = async (req, res, io) => {
   try {
     const duel = await Duel.findById(req.params.id);
     if (!duel) {
       return res.status(404).json({ message: "Duel non trouvé" });
     }
-    // Ajouter la question, les options et la réponse correcte lors de l'acceptation du duel
-    duel.status = "accepted";
-    duel.question =
-      req.body.question || "Quelle est la capitale de la France ?";
-    duel.options = req.body.options || ["Paris", "Lyon", "Marseille", "Nice"];
-    duel.correctAnswer = req.body.correctAnswer || "Paris";
 
+    duel.status = "accepted"; // Marquer le duel comme accepté
     await duel.save();
 
-    // Notification aux joueurs du duel
+    // Notifier les deux joueurs via WebSocket
     io.to(duel.challenger.toString()).emit("duelAccepted", duel);
     io.to(duel.opponent.toString()).emit("duelAccepted", duel);
 
-    console.log(`Duel accepté : ${duel._id}`);
-    console.log(
-      `Émission de l'événement 'duelAccepted' aux joueurs : ${duel.challenger} et ${duel.opponent}`
-    );
-
-    // Un seul appel res.status(200)
     res.status(200).json(duel);
   } catch (error) {
     res
@@ -89,14 +84,14 @@ exports.getUserDuels = async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    // Récupérer à la fois les duels envoyés et reçus par l'utilisateur
+    // Récupérer à la fois les duels envoyés et reçus par l'utilisateur avec les statuts "pending" ou "accepted"
     const receivedDuels = await Duel.find({
       opponent: userId,
-      status: "pending",
+      status: { $in: ["pending", "accepted"] }, // Inclure les duels "accepted"
     });
     const sentDuels = await Duel.find({
       challenger: userId,
-      status: "pending",
+      status: { $in: ["pending", "accepted"] }, // Inclure les duels "accepted"
     });
 
     // Combiner les duels envoyés et reçus
@@ -112,10 +107,13 @@ exports.getUserDuels = async (req, res) => {
 
 exports.deleteDuel = async (req, res, io) => {
   try {
-    const duel = await Duel.findByIdAndDelete(req.params.id); // Utilisation de findByIdAndDelete
+    const duel = await Duel.findById(req.params.id);
     if (!duel) {
       return res.status(404).json({ message: "Duel non trouvé" });
     }
+
+    // Utilisation de deleteOne() pour supprimer le duel
+    await duel.deleteOne();
 
     // Notification aux joueurs que le duel a été annulé
     io.to(duel.challenger.toString()).emit("duelCancelled", duel._id);

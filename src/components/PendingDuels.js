@@ -24,10 +24,7 @@ const PendingDuels = () => {
       dispatch(fetchDuels(userId));
     }
 
-    const socket = io(
-      process.env.REACT_APP_API_URL ||
-        "https://turbo-space-capybara-qjgjjxrp6q529xxr-5000.app.github.dev"
-    );
+    const socket = io(process.env.REACT_APP_API_URL);
 
     socket.emit("join", userId);
     console.log(`L'utilisateur ${userId} a rejoint le room WebSocket`);
@@ -38,8 +35,11 @@ const PendingDuels = () => {
     });
 
     socket.on("duelAccepted", (updatedDuel) => {
-      console.log("Duel accepté :", updatedDuel);
-      dispatch(fetchDuels(userId));
+      console.log(
+        "Duel accepté via WebSocket dans PendingDuels.js :",
+        updatedDuel
+      );
+      dispatch(fetchDuels(userId)); // Met à jour les duels pour que la question apparaisse
     });
 
     socket.on("duelCancelled", (cancelledDuelId) => {
@@ -57,9 +57,16 @@ const PendingDuels = () => {
     };
   }, [dispatch, userId]);
 
-  const handleAcceptDuel = (duelId) => {
-    dispatch(acceptDuel(duelId));
+  const handleAcceptDuel = async (duelId) => {
+    try {
+      // Accepter le duel
+      const result = await dispatch(acceptDuel(duelId)).unwrap();
+      console.log("Duel accepté avec mise à jour :", result); // Vérifier que le duel accepté contient la question
+    } catch (error) {
+      console.error("Erreur lors de l'acceptation du duel :", error);
+    }
   };
+
   const handleCancelDuel = (duelId) => {
     dispatch(deleteDuel(duelId));
   };
@@ -94,7 +101,9 @@ const PendingDuels = () => {
               <div key={duel._id}>
                 <p>Catégorie : {duel.category}</p>
                 <p>Adversaire : {duel.challengerUsername}</p>
-                <button onClick={() => handleAcceptDuel(duel._id)}>
+                <button
+                  onClick={() => handleAcceptDuel(duel._id, duel.category)}
+                >
                   Accepter le Duel
                 </button>
                 <button onClick={() => handleCancelDuel(duel._id)}>
