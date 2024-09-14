@@ -9,6 +9,7 @@ const DuelQuestion = ({ duelId }) => {
   const dispatch = useDispatch();
   const [selectedOption, setSelectedOption] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false); // Vérrouille la réponse après soumission
 
   // Sélection du duel à partir de l'état Redux
   const duel = useSelector((state) => {
@@ -23,6 +24,7 @@ const DuelQuestion = ({ duelId }) => {
     socket.emit("join", duelId);
     console.log(`Rejoint la room du duel ${duelId}`);
 
+    // Evénement pour accepter le duel
     socket.on("duelAccepted", (updatedDuel) => {
       console.log("Duel accepté via WebSocket avec la question:", updatedDuel);
       dispatch(
@@ -35,8 +37,24 @@ const DuelQuestion = ({ duelId }) => {
       );
     });
 
+    // Réception de l'événement duelCompleted
+    socket.on("duelCompleted", (updatedDuel) => {
+      console.log("Duel terminé :", updatedDuel);
+      dispatch(
+        setQuestion({
+          duelId: updatedDuel._id,
+          question: updatedDuel.question,
+          options: updatedDuel.options,
+          correctAnswer: updatedDuel.correctAnswer,
+          status: updatedDuel.status, // Ajout du statut ici
+          winner: updatedDuel.winner, // Ajout du gagnant ici
+        })
+      );
+    });
+
     return () => {
       socket.off("duelAccepted");
+      socket.off("duelCompleted");
     };
   }, [dispatch, duelId]);
 
@@ -47,7 +65,15 @@ const DuelQuestion = ({ duelId }) => {
           duelId,
           answer: selectedOption,
         })
-      );
+      )
+        .unwrap() // Utilisez unwrap() pour obtenir le résultat de la promesse
+        .then(() => {
+          console.log("Réponse soumise avec succès :", selectedOption);
+          setIsSubmitted(true); // Verrouille la réponse après soumission
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la soumission de la réponse :", error);
+        });
 
       setFeedback(
         selectedOption === duel.correctAnswer
@@ -79,15 +105,36 @@ const DuelQuestion = ({ duelId }) => {
                 name="quizOption"
                 value={option}
                 onChange={(e) => setSelectedOption(e.target.value)}
+                disabled={isSubmitted} // Désactiver la réponse après soumission
               />
               {option}
             </label>
           </div>
         ))}
-        <button onClick={handleSubmit} disabled={!selectedOption}>
-          Soumettre la réponse
+        <button
+          onClick={handleSubmit}
+          disabled={!selectedOption || isSubmitted}
+        >
+          {isSubmitted ? "Réponse soumise" : "Soumettre la réponse"}
         </button>
         {feedback && <p>{feedback}</p>}
+      </div>
+    );
+  }
+
+  if (duel.status === "completed") {
+    return (
+      <div>
+        <h3>Résultat du duel</h3>
+        <p>Gagnant: {duel.winner === "draw" ? "Égalité" : duel.winner}</p>
+        <p>
+          Points du challenger ({duel.challengerUsername}):{" "}
+          {duel.challengerPointsGained}
+        </p>
+        <p>
+          Points de l'adversaire ({duel.opponentUsername}):{" "}
+          {duel.opponentPointsGained}
+        </p>
       </div>
     );
   }

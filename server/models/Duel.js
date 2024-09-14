@@ -25,22 +25,35 @@ const duelSchema = new mongoose.Schema({
   },
   question: {
     type: String,
-    required: false, // Rendre optionnel
+    required: false, // Peut être générée plus tard
   },
   options: {
     type: [String],
-    required: false, // Rendre optionnel
+    required: false, // Peut être généré plus tard
   },
   correctAnswer: {
     type: String,
-    required: false, // Rendre optionnel
+    required: false, // Peut être généré plus tard
   },
   challengerAnswer: {
     type: String,
+    default: null,
   },
   opponentAnswer: {
     type: String,
+    default: null,
   },
+
+  // Ajout des champs pour savoir si chaque joueur a répondu
+  challengerAnswered: {
+    type: Boolean,
+    default: false, // Initialement à false
+  },
+  opponentAnswered: {
+    type: Boolean,
+    default: false, // Initialement à false
+  },
+
   challengerPointsGained: {
     type: Number,
     default: 0,
@@ -54,11 +67,13 @@ const duelSchema = new mongoose.Schema({
     enum: ["pending", "accepted", "completed"],
     default: "pending",
   },
+
+  // Ajout de la possibilité d'avoir "draw" pour une égalité
   winner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    type: String,
     default: null,
   },
+
   createdAt: {
     type: Date,
     default: Date.now,

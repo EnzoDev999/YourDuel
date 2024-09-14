@@ -128,3 +128,80 @@ exports.deleteDuel = async (req, res, io) => {
     });
   }
 };
+
+// Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
+exports.submitAnswer = async (req, res, io) => {
+  try {
+    const { userId, answer } = req.body; // On récupère seulement l'userId et la réponse dans le body
+    const { id: duelId } = req.params; // Le duelId est récupéré à partir de l'URL
+
+    if (!duelId || !userId || !answer) {
+      return res.status(400).json({
+        message: "Le duelId, userId et la réponse sont obligatoires",
+      });
+    }
+
+    const duel = await Duel.findById(duelId);
+
+    if (!duel) {
+      return res.status(404).json({ message: "Duel non trouvé" });
+    }
+
+    // Vérifie si l'utilisateur est le challenger ou l'adversaire en comparant les IDs en tant que chaînes
+    if (duel.challenger.toString() === userId.toString()) {
+      if (duel.challengerAnswered) {
+        return res
+          .status(400)
+          .json({ message: "Le challenger a déjà répondu" });
+      }
+      duel.challengerAnswer = answer;
+      duel.challengerAnswered = true;
+      if (
+        answer.trim().toLowerCase() === duel.correctAnswer.trim().toLowerCase()
+      ) {
+        duel.challengerPointsGained = 1;
+      }
+    } else if (duel.opponent.toString() === userId.toString()) {
+      if (duel.opponentAnswered) {
+        return res.status(400).json({ message: "L'adversaire a déjà répondu" });
+      }
+      duel.opponentAnswer = answer;
+      duel.opponentAnswered = true;
+      if (
+        answer.trim().toLowerCase() === duel.correctAnswer.trim().toLowerCase()
+      ) {
+        duel.opponentPointsGained = 1;
+      }
+    } else {
+      return res
+        .status(403)
+        .json({ message: "Utilisateur non valide pour ce duel" });
+    }
+
+    // Vérifie si les deux joueurs ont répondu
+    if (duel.challengerAnswered && duel.opponentAnswered) {
+      duel.status = "completed"; // Change l'état du duel à "completed"
+
+      // Détermine le gagnant ou égalité
+      if (duel.challengerPointsGained > duel.opponentPointsGained) {
+        duel.winner = duel.challengerUsername;
+      } else if (duel.opponentPointsGained > duel.challengerPointsGained) {
+        duel.winner = duel.opponentUsername;
+      } else {
+        duel.winner = "draw"; // Égalité
+      }
+
+      // Notifie les joueurs via WebSocket
+      io.to(duel.challenger.toString()).emit("duelCompleted", duel);
+      io.to(duel.opponent.toString()).emit("duelCompleted", duel);
+    }
+
+    await duel.save(); // Sauvegarde le duel mis à jour
+    res.status(200).json(duel);
+  } catch (error) {
+    console.error("Erreur lors de la soumission de la réponse :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la soumission de la réponse", error });
+  }
+};

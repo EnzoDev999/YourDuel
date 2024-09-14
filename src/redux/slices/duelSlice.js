@@ -77,6 +77,21 @@ export const fetchRandomQuestion = createAsyncThunk(
   }
 );
 
+export const submitAnswer = createAsyncThunk(
+  "duel/submitAnswer",
+  async ({ duelId, answer }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/duels/${duelId}/answer`,
+        { answer }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const duelSlice = createSlice({
   name: "duel",
   initialState,
@@ -192,11 +207,21 @@ const duelSlice = createSlice({
       .addCase(deleteDuel.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+      .addCase(submitAnswer.fulfilled, (state, action) => {
+        const duel = state.duels.find(
+          (duel) => duel._id === action.payload.duelId
+        );
+        if (duel) {
+          duel.userAnswer = action.payload.answer;
+        }
+      })
+      .addCase(submitAnswer.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
 
-export const { removeDuel, setQuestion, submitAnswer, clearDuels } =
-  duelSlice.actions;
+export const { removeDuel, setQuestion, clearDuels } = duelSlice.actions;
 
 export default duelSlice.reducer;
