@@ -1,6 +1,11 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchDuels, deleteDuel, acceptDuel } from "../redux/slices/duelSlice";
+import {
+  fetchDuels,
+  deleteDuel,
+  acceptDuel,
+  removeDuel,
+} from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
 const PendingDuels = () => {
@@ -26,7 +31,7 @@ const PendingDuels = () => {
 
     const socket = io(process.env.REACT_APP_API_URL);
 
-    socket.emit("join", userId);
+    socket.emit("joinRooms", { userId, duelId: null });
     console.log(`L'utilisateur ${userId} a rejoint le room WebSocket`);
 
     socket.on("duelReceived", (newDuel) => {
@@ -44,10 +49,7 @@ const PendingDuels = () => {
 
     socket.on("duelCancelled", (cancelledDuelId) => {
       console.log("Duel annulé:", cancelledDuelId);
-      dispatch({
-        type: "duel/removeDuel", // Action Redux pour supprimer le duel
-        payload: cancelledDuelId,
-      });
+      dispatch(removeDuel(cancelledDuelId));
     });
 
     return () => {

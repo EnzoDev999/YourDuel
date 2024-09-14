@@ -109,6 +109,8 @@ const duelSlice = createSlice({
         duel.question = action.payload.question;
         duel.options = action.payload.options;
         duel.correctAnswer = action.payload.correctAnswer;
+        duel.status = action.payload.status;
+        duel.winner = action.payload.winner;
       }
     },
     // Soumettre la réponse à une question

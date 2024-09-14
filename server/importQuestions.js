@@ -23,7 +23,6 @@ const importQuestions = async () => {
 
     // Insérer les nouvelles questions
     await Question.insertMany(questionsData.questions);
-    console.log("Questions importées avec succès !");
     process.exit();
   } catch (error) {
     console.error("Erreur lors de l'importation des questions :", error);

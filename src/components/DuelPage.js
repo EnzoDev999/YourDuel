@@ -19,8 +19,6 @@ const Profile = () => {
     )
   );
 
-  console.log("Duels acceptés :", duels); // Vérifiez ce que vous obtenez ici
-
   if (status === "loading") {
     return <p>Loading...</p>;
   }

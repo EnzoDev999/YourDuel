@@ -22,16 +22,12 @@ const AcceptDuel = ({ duelId, category }) => {
   };
 
   const handleAcceptDuel = async () => {
-    console.log("Bouton cliqué, duel accepté");
-
     dispatch(setStatus("loading"));
 
     try {
       dispatch(acceptDuel(duelId));
-      console.log("Duel accepté, sélection d'une question...");
 
       const questionData = getRandomQuestion(category); // Sélectionne une question aléatoire
-      console.log("Question sélectionnée:", questionData);
 
       dispatch(
         setQuestion({
@@ -41,13 +37,6 @@ const AcceptDuel = ({ duelId, category }) => {
           correctAnswer: questionData.correctAnswer,
         })
       );
-
-      console.log("Dispatched setQuestion with:", {
-        duelId,
-        question: questionData.question,
-        options: questionData.options,
-        correctAnswer: questionData.correctAnswer,
-      });
 
       dispatch(setStatus("succeeded"));
     } catch (error) {

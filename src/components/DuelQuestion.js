@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { submitAnswer, setQuestion } from "../redux/slices/duelSlice";
+import {
+  submitAnswer,
+  setQuestion,
+  removeDuel,
+} from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
 const DuelQuestion = ({ duelId }) => {
-  console.log("DuelQuestion: duelId reçu :", duelId);
-
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user.userInfo._id); // Ajoutez cette ligne pour récupérer userId
   const [selectedOption, setSelectedOption] = useState("");
@@ -15,16 +17,20 @@ const DuelQuestion = ({ duelId }) => {
   // Sélection du duel à partir de l'état Redux
   const duel = useSelector((state) => {
     const foundDuel = state.duel.duels.find((duel) => duel._id === duelId);
-    console.log("Duel trouvé dans Redux :", foundDuel);
     return foundDuel;
   });
 
   useEffect(() => {
+    console.log("Composant DuelQuestion monté pour le duel:", duelId);
     const socket = io(process.env.REACT_APP_API_URL);
 
-    socket.emit("join", duelId);
-    console.log(`Rejoint la room du duel ${duelId}`);
+    // Rejoins à la fois la room de l'utilisateur et du duel
+    socket.emit("joinRooms", { userId, duelId });
+    console.log(
+      `Tentative de rejoindre les rooms pour user ${userId} et duel ${duelId}`
+    );
 
+    // Événement pour accepter le duel
     socket.on("duelAccepted", (updatedDuel) => {
       console.log("Duel accepté via WebSocket avec la question:", updatedDuel);
       dispatch(
@@ -37,8 +43,12 @@ const DuelQuestion = ({ duelId }) => {
       );
     });
 
+    // Événement pour compléter le duel
     socket.on("duelCompleted", (updatedDuel) => {
-      console.log("Duel terminé :", updatedDuel);
+      console.log(
+        "Événement duelCompleted reçu pour le duel:",
+        updatedDuel._id
+      );
       dispatch(
         setQuestion({
           duelId: updatedDuel._id,
@@ -49,23 +59,20 @@ const DuelQuestion = ({ duelId }) => {
           winner: updatedDuel.winner,
         })
       );
+      if (updatedDuel.status === "completed") {
+        console.log("Duel terminé et suppression en cours :", updatedDuel._id);
+        dispatch(removeDuel(updatedDuel._id));
+      }
     });
 
     return () => {
       socket.off("duelAccepted");
       socket.off("duelCompleted");
     };
-  }, [dispatch, duelId]);
+  }, [dispatch, duelId, userId]);
 
   const handleSubmit = () => {
     if (duel && selectedOption && userId) {
-      // Log the data being sent to the backend
-      console.log("Données envoyées au backend :", {
-        duelId,
-        userId,
-        answer: selectedOption,
-      });
-
       dispatch(
         submitAnswer({
           duelId, // Assurez-vous que duelId est bien défini
@@ -75,7 +82,6 @@ const DuelQuestion = ({ duelId }) => {
       )
         .unwrap()
         .then(() => {
-          console.log("Réponse soumise avec succès :", selectedOption);
           setIsSubmitted(true);
         })
         .catch((error) => {

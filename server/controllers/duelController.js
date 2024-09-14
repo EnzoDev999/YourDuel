@@ -213,6 +213,17 @@ exports.submitAnswer = async (req, res, io) => {
       await challengerUser.save();
       await opponentUser.save();
 
+      // Log avant d'envoyer l'événement WebSocket
+      console.log(
+        "Duel complété, envoi de l'événement duelCompleted:",
+        duel._id
+      );
+
+      // Ajoute ce log après l'émission
+      console.log(
+        `Événement duelCompleted envoyé à: ${duel.challenger}, ${duel.opponent}`
+      );
+
       // Notifie les joueurs via WebSocket
       io.to(duel.challenger.toString()).emit("duelCompleted", duel);
       io.to(duel.opponent.toString()).emit("duelCompleted", duel);
