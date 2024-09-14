@@ -105,30 +105,6 @@ exports.getUserDuels = async (req, res) => {
   }
 };
 
-exports.deleteDuel = async (req, res, io) => {
-  try {
-    const duel = await Duel.findById(req.params.id);
-    if (!duel) {
-      return res.status(404).json({ message: "Duel non trouvé" });
-    }
-
-    // Utilisation de deleteOne() pour supprimer le duel
-    await duel.deleteOne();
-
-    // Notification aux joueurs que le duel a été annulé
-    io.to(duel.challenger.toString()).emit("duelCancelled", duel._id);
-    io.to(duel.opponent.toString()).emit("duelCancelled", duel._id);
-
-    res.status(200).json({ message: "Duel supprimé avec succès" });
-  } catch (error) {
-    console.error("Erreur lors de la suppression du duel :", error);
-    res.status(500).json({
-      message: "Erreur lors de la suppression du duel",
-      error: error.message || "Erreur inconnue",
-    });
-  }
-};
-
 // Mettre à jour les réponses des joueurs et terminer le duel si les deux ont répondu
 exports.submitAnswer = async (req, res, io) => {
   try {
@@ -182,14 +158,56 @@ exports.submitAnswer = async (req, res, io) => {
     if (duel.challengerAnswered && duel.opponentAnswered) {
       duel.status = "completed"; // Change l'état du duel à "completed"
 
-      // Détermine le gagnant ou égalité
+      let challengerUser = await User.findById(duel.challenger);
+      let opponentUser = await User.findById(duel.opponent);
+
+      // Détermine le gagnant ou égalité pour les deux joueurs
+      let challengerResult = "draw";
+      let opponentResult = "draw";
+
       if (duel.challengerPointsGained > duel.opponentPointsGained) {
         duel.winner = duel.challengerUsername;
+
+        // Mettre à jour les statistiques du challenger (victoire)
+        challengerUser.totalWins += 1;
+        challengerUser.points += 1;
+        opponentUser.totalLosses += 1;
+
+        challengerResult = "win";
+        opponentResult = "loss";
       } else if (duel.opponentPointsGained > duel.challengerPointsGained) {
         duel.winner = duel.opponentUsername;
+
+        // Mettre à jour les statistiques de l'opponent (victoire)
+        opponentUser.totalWins += 1;
+        opponentUser.points += 1;
+        challengerUser.totalLosses += 1;
       } else {
         duel.winner = "draw"; // Égalité
       }
+
+      // Mettre à jour le nombre de duels joués pour les deux joueurs
+      challengerUser.totalDuelsPlayed += 1;
+      opponentUser.totalDuelsPlayed += 1;
+
+      // Ajouter le duel à l'historique des deux utilisateurs
+      challengerUser.duelsHistory.push({
+        duelId: duel._id,
+        result: challengerResult,
+        pointsGained: duel.challengerPointsGained,
+        pointsLost: challengerResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
+      });
+
+      opponentUser.duelsHistory.push({
+        duelId: duel._id,
+        result: opponentResult,
+        pointsGained: duel.opponentPointsGained,
+        pointsLost: opponentResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
+      });
+
+      // Sauvegarder les utilisateurs mis à jour
+      await challengerUser.save();
+      await opponentUser.save();
 
       // Notifie les joueurs via WebSocket
       io.to(duel.challenger.toString()).emit("duelCompleted", duel);
