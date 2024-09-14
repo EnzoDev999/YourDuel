@@ -79,11 +79,11 @@ export const fetchRandomQuestion = createAsyncThunk(
 
 export const submitAnswer = createAsyncThunk(
   "duel/submitAnswer",
-  async ({ duelId, answer }, { rejectWithValue }) => {
+  async ({ duelId, answer, userId }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
         `${API_URL}/api/duels/${duelId}/answer`,
-        { answer }
+        { answer, userId }
       );
       return response.data;
     } catch (error) {

@@ -4,17 +4,18 @@ import { submitAnswer, setQuestion } from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
 const DuelQuestion = ({ duelId }) => {
-  console.log("DuelQuestion: duelId reçu :", duelId); // Ajoutez ce log pour vérifier le duelId dans DuelQuestion
+  console.log("DuelQuestion: duelId reçu :", duelId);
 
   const dispatch = useDispatch();
+  const userId = useSelector((state) => state.user.userInfo._id); // Ajoutez cette ligne pour récupérer userId
   const [selectedOption, setSelectedOption] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false); // Vérrouille la réponse après soumission
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Sélection du duel à partir de l'état Redux
   const duel = useSelector((state) => {
     const foundDuel = state.duel.duels.find((duel) => duel._id === duelId);
-    console.log("Duel trouvé dans Redux :", foundDuel); // Log pour vérifier si le duel est bien trouvé dans Redux
+    console.log("Duel trouvé dans Redux :", foundDuel);
     return foundDuel;
   });
 
@@ -24,7 +25,6 @@ const DuelQuestion = ({ duelId }) => {
     socket.emit("join", duelId);
     console.log(`Rejoint la room du duel ${duelId}`);
 
-    // Evénement pour accepter le duel
     socket.on("duelAccepted", (updatedDuel) => {
       console.log("Duel accepté via WebSocket avec la question:", updatedDuel);
       dispatch(
@@ -37,7 +37,6 @@ const DuelQuestion = ({ duelId }) => {
       );
     });
 
-    // Réception de l'événement duelCompleted
     socket.on("duelCompleted", (updatedDuel) => {
       console.log("Duel terminé :", updatedDuel);
       dispatch(
@@ -46,8 +45,8 @@ const DuelQuestion = ({ duelId }) => {
           question: updatedDuel.question,
           options: updatedDuel.options,
           correctAnswer: updatedDuel.correctAnswer,
-          status: updatedDuel.status, // Ajout du statut ici
-          winner: updatedDuel.winner, // Ajout du gagnant ici
+          status: updatedDuel.status,
+          winner: updatedDuel.winner,
         })
       );
     });
@@ -59,17 +58,25 @@ const DuelQuestion = ({ duelId }) => {
   }, [dispatch, duelId]);
 
   const handleSubmit = () => {
-    if (duel && selectedOption) {
+    if (duel && selectedOption && userId) {
+      // Log the data being sent to the backend
+      console.log("Données envoyées au backend :", {
+        duelId,
+        userId,
+        answer: selectedOption,
+      });
+
       dispatch(
         submitAnswer({
-          duelId,
+          duelId, // Assurez-vous que duelId est bien défini
+          userId, // Envoyez aussi userId pour identifier l'utilisateur qui soumet
           answer: selectedOption,
         })
       )
-        .unwrap() // Utilisez unwrap() pour obtenir le résultat de la promesse
+        .unwrap()
         .then(() => {
           console.log("Réponse soumise avec succès :", selectedOption);
-          setIsSubmitted(true); // Verrouille la réponse après soumission
+          setIsSubmitted(true);
         })
         .catch((error) => {
           console.error("Erreur lors de la soumission de la réponse :", error);
@@ -80,6 +87,8 @@ const DuelQuestion = ({ duelId }) => {
           ? "Correct!"
           : `Incorrect. La bonne réponse était : ${duel.correctAnswer}`
       );
+    } else {
+      console.log("Tous les paramètres requis ne sont pas présents.");
     }
   };
 
@@ -105,7 +114,7 @@ const DuelQuestion = ({ duelId }) => {
                 name="quizOption"
                 value={option}
                 onChange={(e) => setSelectedOption(e.target.value)}
-                disabled={isSubmitted} // Désactiver la réponse après soumission
+                disabled={isSubmitted}
               />
               {option}
             </label>

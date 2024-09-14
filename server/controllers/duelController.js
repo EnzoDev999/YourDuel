@@ -110,6 +110,10 @@ exports.submitAnswer = async (req, res, io) => {
   try {
     const { userId, answer } = req.body; // On récupère seulement l'userId et la réponse dans le body
     const { id: duelId } = req.params; // Le duelId est récupéré à partir de l'URL
+    // Ajoutez ces logs pour voir ce que vous recevez dans le body
+    console.log("duelId reçu :", duelId);
+    console.log("userId reçu :", userId);
+    console.log("answer reçu :", answer);
 
     if (!duelId || !userId || !answer) {
       return res.status(400).json({
