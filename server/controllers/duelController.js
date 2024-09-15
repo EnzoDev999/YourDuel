@@ -15,7 +15,8 @@ exports.createDuel = async (req, res, io) => {
     }
 
     // Utiliser une variable d'environnement pour l'URL de l'API côté serveur
-    const API_URL = process.env.API_URL || "http://localhost:5000";
+    const API_URL =
+      process.env.REACT_APP_API_URL_NETWORK || "http://localhost:5000";
 
     // Appel à l'API pour obtenir une question aléatoire dès la création du duel
     const response = await axios.get(
@@ -261,5 +262,33 @@ exports.deleteAllDuels = async (req, res) => {
     res
       .status(500)
       .json({ message: "Erreur lors de la suppression des duels" });
+  }
+};
+
+// Supprime un duel en particulier
+exports.deleteDuel = async (req, res, io) => {
+  try {
+    const duelId = req.params.id;
+
+    // Trouver le duel à annuler
+    const duel = await Duel.findById(duelId);
+
+    if (!duel) {
+      return res.status(404).json({ message: "Duel non trouvé" });
+    }
+
+    // Supprimer le duel
+    await duel.deleteOne();
+
+    // Notifie les joueurs via WebSocket que le duel a été annulé
+    io.to(duel.challenger.toString()).emit("duelCancelled", duel._id);
+    io.to(duel.opponent.toString()).emit("duelCancelled", duel._id);
+
+    res.status(200).json({ message: "Duel supprimé avec succès" });
+  } catch (error) {
+    console.error("Erreur lors de la suppression du duel :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la suppression du duel", error });
   }
 };
