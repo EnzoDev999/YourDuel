@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+const { io } = require("socket.io-client");
 
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -24,6 +25,18 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
+
+    // Ecouter l'événement leaderboardUpdated via WebSocket
+    const socket = io(API_URL);
+
+    socket.on("leaderboardUpdated", () => {
+      console.log("Duel terminé, rafraîchissement du classement...");
+      fetchLeaderboard(); // Rafraîchir le classement dès qu'un duel est terminé
+    });
+
+    return () => {
+      socket.off("duelCompleted");
+    };
   }, [API_URL]);
 
   if (loading) {

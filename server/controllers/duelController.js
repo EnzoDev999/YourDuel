@@ -237,6 +237,8 @@ exports.submitAnswer = async (req, res, io) => {
       console.log(
         `Événement duelCompleted envoyé à: ${duel.challenger}, ${duel.opponent}`
       );
+      // Emission d'un événement pour notifier que le leaderboard à été mis à jour
+      io.emit("leaderboardUpdated");
 
       // Notifie les joueurs via WebSocket
       io.to(duel.challenger.toString()).emit("duelCompleted", duel);
