@@ -5,6 +5,7 @@ import store from "./redux/store";
 import App from "./App";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const socket = io("http://localhost:5000/", {
   transports: ["websocket", "polling"], // Assurez-vous d'utiliser WebSocket
@@ -38,5 +39,6 @@ axios.interceptors.request.use((request) => {
 root.render(
   <Provider store={store}>
     <App />
+    <SpeedInsights />
   </Provider>
 );
