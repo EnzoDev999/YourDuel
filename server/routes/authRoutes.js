@@ -8,6 +8,7 @@ const {
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware"); // Utilisation du middleware protect
 const User = require("../models/User");
+const Duel = require("../models/Duel");
 const router = express.Router();
 
 // Route pour l'inscription
@@ -38,13 +39,41 @@ router.get("/users/:username", async (req, res) => {
 // Route pour obtenir l'historique des duels de l'utilisateur
 router.get("/duelHistory/:userId", async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).populate(
-      "duelsHistory.duelId"
-    );
+    const { page = 1, limit = 3 } = req.query; // Par défaut, afficher les 3 derniers duels
+
+    const user = await User.findById(req.params.userId);
+
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
-    res.status(200).json(user.duelsHistory);
+    // Trier l'historique des duels par date décroissante
+    const sortedHistory = user.duelsHistory.sort((a, b) => b.date - a.date);
+
+    // Pagniner l'historique des duels
+    const paginatedHistory = sortedHistory.slice(
+      (page - 1) * limit,
+      page * limit
+    );
+
+    // Peupler chaque duel manuellement
+    const populatedHistory = await Promise.all(
+      paginatedHistory.map(async (entry) => {
+        const duel = await Duel.findById(entry.duelId);
+        return {
+          ...entry._doc, // Conserver les autres champs de l'entrée
+          duel, // Ajouter les informations du duel peuplées
+        };
+      })
+    );
+
+    // Compte total pour la pagination
+    const totalDuels = user.duelsHistory.length;
+
+    res.status(200).json({
+      duels: populatedHistory, // Les duels peuplés
+      totalPages: Math.ceil(totalDuels / limit), // Nombre de pages
+      currentPage: parseInt(page), // Page actuelle
+    });
   } catch (error) {
     console.error(
       "Erreur lors de la récupération de l'historique des duels :",
