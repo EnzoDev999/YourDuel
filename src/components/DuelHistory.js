@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
 
 const DuelHistory = ({ userId }) => {
   const [duelHistory, setDuelHistory] = useState([]);
@@ -14,11 +15,10 @@ const DuelHistory = ({ userId }) => {
       : process.env.REACT_APP_API_URL_NETWORK;
 
   useEffect(() => {
-    const fetchDuelHistory = async () => {
+    const fetchDuelHistory = async (page = 1) => {
       try {
-        setLoading(true);
         const response = await axios.get(
-          `${API_URL}/api/auth/duelHistory/${userId}?page=${currentPage}&limit=3`
+          `${API_URL}/api/auth/duelHistory/${userId}?page=${page}&limit=3`
         );
         setDuelHistory(response.data.duels);
         setTotalPages(response.data.totalPages);
@@ -29,8 +29,28 @@ const DuelHistory = ({ userId }) => {
       }
     };
 
-    fetchDuelHistory();
-  }, [userId, API_URL, currentPage]);
+    fetchDuelHistory(currentPage);
+
+    // Écouter l'événement "duelCompleted" via WebSocket
+    const socket = io(API_URL);
+
+    socket.emit("joinRooms", { userId, duelId: null }); // S'assurer que l'utilisateur rejoint la room correcte
+
+    socket.on("duelCompleted", () => {
+      console.log(
+        "Duel terminé, rafraîchissement de l'historique des duels..."
+      );
+      fetchDuelHistory(currentPage); // Rafraîchir l'historique dès qu'un duel est terminé
+    });
+
+    return () => {
+      socket.off("duelCompleted");
+    };
+  }, [API_URL, userId, currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   if (loading) {
     return <p>Chargement de l'historique des duels...</p>;
@@ -43,18 +63,6 @@ const DuelHistory = ({ userId }) => {
   if (duelHistory.length === 0) {
     return <p>Aucun duel joué.</p>;
   }
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   return (
     <div>
@@ -79,13 +87,19 @@ const DuelHistory = ({ userId }) => {
 
       {/* Pagination */}
       <div>
-        <button onClick={goToPreviousPage} disabled={currentPage === 1}>
+        <button
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
           Précédent
         </button>
         <span>
           Page {currentPage} sur {totalPages}
         </span>
-        <button onClick={goToNextPage} disabled={currentPage === totalPages}>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
           Suivant
         </button>
       </div>
