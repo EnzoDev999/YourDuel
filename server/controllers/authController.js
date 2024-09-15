@@ -65,3 +65,48 @@ exports.getUserProfile = async (req, res) => {
       .json({ message: "Erreur lors de la récupération du profil", error });
   }
 };
+
+// Obtenir le classement des utilisateurs
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const users = await User.find({ points: { $gte: 1 } }) // Trouver les utilisateurs avec au moins 1 point
+      .sort({ points: -1 }) // Trier par points descendant
+      .select("username points totalWins totalDraws totalDuelsPlayed"); // Sélectionner les champs utilisateur et points
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Erreur lors de la récupération du classement :", error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération du classement",
+      error,
+    });
+  }
+};
+
+exports.resetAllUserStats = async (req, res) => {
+  try {
+    await User.updateMany(
+      {}, // Applique la mise à jour à tous les utilisateurs
+      {
+        $set: {
+          points: 0,
+          totalDuelsPlayed: 0,
+          totalWins: 0,
+          totalLosses: 0,
+          duelsHistory: [],
+        },
+      }
+    );
+    res.status(200).json({
+      message: "Les statistiques des utilisateurs ont été réinitialisées.",
+    });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la réinitialisation des statistiques :",
+      error
+    );
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la réinitialisation des statistiques" });
+  }
+};

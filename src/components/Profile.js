@@ -5,6 +5,8 @@ import CreateDuel from "./CreateDuel";
 import PendingDuels from "./PendingDuels";
 import DuelQuestion from "./DuelQuestion";
 import ResetDuelsButton from "./ResetDuelsButton";
+import DuelHistory from "./DuelHistory";
+import Leaderboard from "./Leaderboard";
 
 const Profile = () => {
   const { isAuthenticated, userInfo, status, error } = useSelector(
@@ -40,6 +42,9 @@ const Profile = () => {
           <p>Username: {userInfo.username}</p>
           <p>Email: {userInfo.email || "No email provided"}</p>
 
+          {/* Classement Général */}
+          <Leaderboard />
+
           {/* Ajouter ici la création de duel */}
           <CreateDuel />
 
@@ -56,6 +61,8 @@ const Profile = () => {
           )}
 
           <ResetDuelsButton />
+          {/* Ajouter l'historique des duels */}
+          <DuelHistory userId={userInfo._id} />
         </div>
       ) : (
         <p>No user information available.</p>

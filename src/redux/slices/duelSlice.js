@@ -7,7 +7,10 @@ const initialState = {
   error: null,
 };
 
-const API_URL = process.env.API_URL || "http://localhost:5000";
+const API_URL =
+  window.location.hostname === "localhost"
+    ? process.env.REACT_APP_API_URL_LOCAL
+    : process.env.REACT_APP_API_URL_NETWORK;
 
 // Action pour récupérer les duels depuis le backend
 export const fetchDuels = createAsyncThunk(

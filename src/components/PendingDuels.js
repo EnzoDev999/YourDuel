@@ -8,6 +8,11 @@ import {
 } from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
+const API_URL =
+  window.location.hostname === "localhost"
+    ? process.env.REACT_APP_API_URL_LOCAL
+    : process.env.REACT_APP_API_URL_NETWORK;
+
 const PendingDuels = () => {
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user.userInfo._id);
@@ -29,7 +34,7 @@ const PendingDuels = () => {
       dispatch(fetchDuels(userId));
     }
 
-    const socket = io(process.env.REACT_APP_API_URL);
+    const socket = io(API_URL);
 
     socket.emit("joinRooms", { userId, duelId: null });
     console.log(`L'utilisateur ${userId} a rejoint le room WebSocket`);

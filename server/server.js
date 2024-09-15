@@ -15,15 +15,15 @@ const server = http.createServer(app);
 // Autoriser le frontend à se connecter via CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // URL du frontend local
+    origin: "*", // URL du frontend local
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+    credentials: false,
   })
 );
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // URL du frontend local
+    origin: "*", // URL du frontend local
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -70,6 +70,8 @@ io.on("connection", (socket) => {
 
 // Lancement du serveur
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+const HOST = "0.0.0.0"; // Écoute sur toutes les interfaces réseau locales
+
+server.listen(PORT, HOST, () => {
   console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
 });

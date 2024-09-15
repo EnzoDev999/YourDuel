@@ -2,7 +2,6 @@ const Duel = require("../models/Duel");
 const User = require("../models/User");
 const axios = require("axios");
 
-// Créer un nouveau duel
 // Créer un nouveau duel avec génération de la question
 exports.createDuel = async (req, res, io) => {
   const { challenger, opponent, category } = req.body;
@@ -15,9 +14,12 @@ exports.createDuel = async (req, res, io) => {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
+    // Utiliser une variable d'environnement pour l'URL de l'API côté serveur
+    const API_URL = process.env.API_URL || "http://localhost:5000";
+
     // Appel à l'API pour obtenir une question aléatoire dès la création du duel
     const response = await axios.get(
-      `${process.env.API_URL}/api/questions/random/${category}`
+      `${API_URL}/api/questions/random/${category}`
     );
     const questionData = response.data;
 
@@ -40,6 +42,7 @@ exports.createDuel = async (req, res, io) => {
 
     res.status(201).json(duel);
   } catch (error) {
+    console.error("Erreur lors de la création du duel:", error);
     res
       .status(500)
       .json({ message: "Erreur lors de la création du duel", error });
@@ -188,6 +191,16 @@ exports.submitAnswer = async (req, res, io) => {
         challengerUser.totalLosses += 1;
       } else {
         duel.winner = "draw"; // Égalité
+
+        // Compte uniquement l'égalité si les deux joueurs ont marqué au moins un point
+        if (duel.challengerPointsGained > 0 && duel.opponentPointsGained > 0) {
+          challengerUser.totalDraws += 1;
+          opponentUser.totalDraws += 1;
+
+          // Les deux joueurs reçoivent un point s'ils ont marqué au moins un point chacun
+          challengerUser.points += 1;
+          opponentUser.points += 1;
+        }
       }
 
       // Mettre à jour le nombre de duels joués pour les deux joueurs
@@ -236,5 +249,17 @@ exports.submitAnswer = async (req, res, io) => {
     res
       .status(500)
       .json({ message: "Erreur lors de la soumission de la réponse", error });
+  }
+};
+
+exports.deleteAllDuels = async (req, res) => {
+  try {
+    await Duel.deleteMany({}); // Supprime tous les duels
+    res.status(200).json({ message: "Tous les duels ont été supprimés." });
+  } catch (error) {
+    console.error("Erreur lors de la suppression des duels :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la suppression des duels" });
   }
 };

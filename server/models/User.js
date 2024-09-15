@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  totalDraws: {
+    // Nouveau champ pour stocker les égalités
+    type: Number,
+    default: 0,
+  },
   duelsHistory: [
     {
       duelId: {

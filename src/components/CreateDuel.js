@@ -3,8 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { createDuel } from "../redux/slices/duelSlice";
 import axios from "axios"; // Importer axios pour faire la requête
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL =
+  window.location.hostname === "localhost"
+    ? process.env.REACT_APP_API_URL_LOCAL
+    : process.env.REACT_APP_API_URL_NETWORK;
 
+console.log("API_URL utilisé :", API_URL);
 const CreateDuel = () => {
   const [category, setCategory] = useState("Culture Générale");
   const [opponentUsername, setOpponentUsername] = useState("");

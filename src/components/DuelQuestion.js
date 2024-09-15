@@ -7,6 +7,11 @@ import {
 } from "../redux/slices/duelSlice";
 import { io } from "socket.io-client";
 
+const API_URL =
+  window.location.hostname === "localhost"
+    ? process.env.REACT_APP_API_URL_LOCAL
+    : process.env.REACT_APP_API_URL_NETWORK;
+
 const DuelQuestion = ({ duelId }) => {
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user.userInfo._id); // Ajoutez cette ligne pour récupérer userId
@@ -22,7 +27,7 @@ const DuelQuestion = ({ duelId }) => {
 
   useEffect(() => {
     console.log("Composant DuelQuestion monté pour le duel:", duelId);
-    const socket = io(process.env.REACT_APP_API_URL);
+    const socket = io(API_URL);
 
     // Rejoins à la fois la room de l'utilisateur et du duel
     socket.emit("joinRooms", { userId, duelId });

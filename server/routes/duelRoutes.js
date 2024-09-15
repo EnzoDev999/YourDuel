@@ -6,6 +6,7 @@ const {
   getUserDuels,
   deleteDuel,
   submitAnswer,
+  deleteAllDuels,
 } = require("../controllers/duelController");
 
 module.exports = (io) => {
@@ -13,6 +14,8 @@ module.exports = (io) => {
 
   // Route pour créer un duel
   router.post("/", (req, res) => createDuel(req, res, io)); // Passer `io` ici
+
+  router.delete("/deleteAll", deleteAllDuels); // Route pour supprimer tous les duels
 
   // Route pour accepter un duel
   router.put("/:id/accept", (req, res) => acceptDuel(req, res, io));
