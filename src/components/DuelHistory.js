@@ -79,6 +79,12 @@ const DuelHistory = ({ userId }) => {
                 : "Égalité"}
             </p>
             <p>
+              <strong>Votre réponse:</strong> {duel.userAnswer || "N/A"}
+            </p>
+            <p>
+              <strong>Bonne réponse:</strong> {duel.correctAnswer}
+            </p>
+            <p>
               <strong>Points gagnés:</strong> {duel.pointsGained}
             </p>
           </li>

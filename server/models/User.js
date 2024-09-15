@@ -56,6 +56,14 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      userAnswer: {
+        type: String,
+        default: null,
+      },
+      correctAnswer: {
+        type: String,
+        default: null,
+      },
       date: {
         type: Date,
         default: Date.now,

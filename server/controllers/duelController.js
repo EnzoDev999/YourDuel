@@ -214,6 +214,8 @@ exports.submitAnswer = async (req, res, io) => {
         result: challengerResult,
         pointsGained: duel.challengerPointsGained,
         pointsLost: challengerResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
+        userAnswer: duel.challengerAnswer, // Ajout de la réponse de l'utilisateur
+        correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
       });
 
       opponentUser.duelsHistory.push({
@@ -221,6 +223,8 @@ exports.submitAnswer = async (req, res, io) => {
         result: opponentResult,
         pointsGained: duel.opponentPointsGained,
         pointsLost: opponentResult === "loss" ? 1 : 0, // Point perdu si le duel est perdu
+        userAnswer: duel.opponentAnswer, // Ajout de la réponse de l'utilisateur
+        correctAnswer: duel.correctAnswer, // Ajout de la bonne réponse
       });
 
       // Sauvegarder les utilisateurs mis à jour
