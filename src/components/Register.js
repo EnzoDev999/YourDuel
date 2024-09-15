@@ -1,17 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../redux/slices/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const dispatch = useDispatch();
-  const { error, status } = useSelector((state) => state.user);
+  const { error, status, isAuthenticated } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Redirige vers la page de profil ou de l'accueil si l'utilisateur est authentifié
+      navigate("/profile");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(registerUser({ username, password, email }));
+
+    // Créer un objet sans l'email si l'email est vide
+    const userData = {
+      username,
+      password,
+    };
+
+    if (email) {
+      userData.email = email; // Ajouter l'email si présent
+    }
+
+    console.log(userData);
+    dispatch(registerUser(userData));
   };
 
   return (

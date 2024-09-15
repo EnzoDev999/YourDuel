@@ -12,7 +12,11 @@ exports.register = async (req, res) => {
     }
 
     // Crée un nouvel utilisateur
-    const user = await User.create({ username, email, password });
+    const user = await User.create({
+      username,
+      email: email || undefined,
+      password,
+    });
 
     // Génère le token JWT
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -23,7 +27,7 @@ exports.register = async (req, res) => {
     res.status(201).json({
       _id: user._id,
       username: user.username,
-      email: user.email, // Ajoute l'email ici
+      email: user.email || null, // Ajoute l'email ou null
       token,
     });
   } catch (error) {
