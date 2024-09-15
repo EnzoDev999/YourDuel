@@ -68,7 +68,14 @@ const Register = () => {
         <button type="submit">Register</button>
       </form>
       {status === "loading" && <p>Registering...</p>}
-      {error && <p>{error}</p>}
+      {/* Vérifiez si l'erreur est un objet ou une chaîne et affichez correctement */}
+      {error && (
+        <p>
+          {typeof error === "string"
+            ? error
+            : error.message || "Erreur lors de l'inscription"}
+        </p>
+      )}
     </div>
   );
 };
