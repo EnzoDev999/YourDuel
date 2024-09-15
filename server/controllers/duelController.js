@@ -190,6 +190,9 @@ exports.submitAnswer = async (req, res, io) => {
         opponentUser.totalWins += 1;
         opponentUser.points += 1;
         challengerUser.totalLosses += 1;
+
+        challengerResult = "loss";
+        opponentResult = "win";
       } else {
         duel.winner = "draw"; // Égalité
 
