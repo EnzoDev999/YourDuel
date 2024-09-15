@@ -8,7 +8,7 @@ import { io } from "socket.io-client";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 
-const socket = io("http://localhost:5000/", {
+const socket = io("https://yourduel.onrender.com/", {
   transports: ["websocket", "polling"], // Assurez-vous d'utiliser WebSocket
 });
 
