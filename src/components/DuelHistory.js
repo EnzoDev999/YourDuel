@@ -71,12 +71,18 @@ const DuelHistory = ({ userId }) => {
         {duelHistory.map((duel, index) => (
           <li key={index}>
             <p>
+              <strong>Adversaire :</strong> {duel.opponentUsername}
+            </p>
+            <p>
               <strong>Résultat:</strong>{" "}
               {duel.result === "win"
                 ? "Victoire"
                 : duel.result === "loss"
                 ? "Défaite"
                 : "Égalité"}
+            </p>
+            <p>
+              <strong>Question :</strong> {duel.question}
             </p>
             <p>
               <strong>Votre réponse:</strong> {duel.userAnswer || "N/A"}

@@ -68,6 +68,14 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
       },
+      opponentUsername: {
+        type: String,
+        default: null,
+      },
+      question: {
+        type: String,
+        default: null,
+      },
     },
   ],
   profilePicture: {
